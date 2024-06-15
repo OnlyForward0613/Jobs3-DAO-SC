@@ -19,17 +19,17 @@ use crate::errors::{
 pub fn admin_approve(
     ctx: Context<AdminApproveContext>,
     contract_id: String,
+    decision: u8 // 0 for both ok by default, 1 for seller, 2 for buyer, 3 for split
 ) -> Result<()> {
     msg!("Releasing funds on seller side!");
 
     let contract = &mut ctx.accounts.contract;
 
-
-    // Check if the contract is pending which means one of two parties approved.
-    require!(contract.status == ContractStatus::Pending, GigContractError::CantRelease);
-
     // Check if the signer is a correct admin
     require_keys_eq!(ctx.accounts.admin.key(), ADMIN_ADDRESS, GigContractError::InvalidAdmin);
+
+    // Check if the contract is pending which means one of two parties approved.
+    require!(contract.status == ContractStatus::Pending || contract.status == ContractStatus::Dispute, GigContractError::NotReadyYet);
 
     let token_program = &ctx.accounts.token_program;
     let source = &ctx.accounts.contract_ata;
@@ -37,15 +37,15 @@ pub fn admin_approve(
     let buyer_destination = &ctx.accounts.buyer_ata;
     let admin_destination = &ctx.accounts.admin_ata;
 
-    contract.status = ContractStatus::Completed;
-    contract.seller_approved = true;
+    // contract.status = ContractStatus::Completed;
+    contract.admin_approved = true;
 
     let total_balance = source.amount;
 
-    // If admin approves, transfer funds from the contrac to seller
-   if contract.buyer_approved == true {
-     // To seller
-     token::transfer(
+    // If buyer is not responding, admin will approve with seller. Admin will get buyer's dispute fee
+   if contract.status == ContractStatus::Pending { 
+        // To seller
+        token::transfer(
         CpiContext::new_with_signer(
             token_program.to_account_info(),
             SplTransfer {
@@ -55,21 +55,7 @@ pub fn admin_approve(
             },
             &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
         ),
-        ((total_balance - 2 * contract.dispute) * 95 / 100 + contract.dispute).try_into().unwrap(),
-        )?;
-    
-        // To buyer
-        token::transfer(
-        CpiContext::new_with_signer(
-            token_program.to_account_info(),
-            SplTransfer {
-                from: source.to_account_info().clone(),
-                to: buyer_destination.to_account_info().clone(),
-                authority: contract.to_account_info().clone(),
-            },
-            &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
-        ),
-        contract.dispute,
+        ((total_balance - 2 * contract.dispute) * 90 / 100 + contract.dispute).try_into().unwrap(),
         )?;
     
         // To admin
@@ -83,49 +69,126 @@ pub fn admin_approve(
             },
             &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
         ),
-        ((total_balance - 2 * contract.dispute ) * 5 / 100).try_into().unwrap(),
+        ((total_balance - 2 * contract.dispute ) * 10 / 100 + contract.dispute).try_into().unwrap(),
         )?;
-   } else { // seller approved
-     token::transfer(
-        CpiContext::new_with_signer(
-            token_program.to_account_info(),
-            SplTransfer {
-                from: source.to_account_info().clone(),
-                to: seller_destination.to_account_info().clone(),
-                authority: contract.to_account_info().clone(),
-            },
-            &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
-        ),
-        ((total_balance - 2 * contract.dispute) * 95 / 100 + contract.dispute).try_into().unwrap(),
-        )?;
+   } else { 
+        // if dispute, perform action based on decision value
+        // 0 for both ok by default, 1 for seller, 2 for buyer, 3 for split
+        
+        match decision {
+            1 => { // admin agrees with seller
+                // transfer payment to seller and admin gets buyer's dispute fee
+                contract.status = ContractStatus::Completed;
+
+                // To seller
+                token::transfer(
+                CpiContext::new_with_signer(
+                    token_program.to_account_info(),
+                    SplTransfer {
+                        from: source.to_account_info().clone(),
+                        to: seller_destination.to_account_info().clone(),
+                        authority: contract.to_account_info().clone(),
+                    },
+                    &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
+                ),
+                ((total_balance - 2 * contract.dispute) * 90 / 100 + contract.dispute).try_into().unwrap(),
+                )?;
     
-        // To buyer
-        token::transfer(
-        CpiContext::new_with_signer(
-            token_program.to_account_info(),
-            SplTransfer {
-                from: source.to_account_info().clone(),
-                to: buyer_destination.to_account_info().clone(),
-                authority: contract.to_account_info().clone(),
+                // To admin
+                token::transfer(
+                CpiContext::new_with_signer(
+                    token_program.to_account_info(),
+                    SplTransfer {
+                        from: source.to_account_info().clone(),
+                        to: admin_destination.to_account_info().clone(),
+                        authority: contract.to_account_info().clone(),
+                    },
+                    &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
+                ),
+                ((total_balance - 2 * contract.dispute ) * 10 / 100 + contract.dispute).try_into().unwrap(),
+                )?;
             },
-            &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
-        ),
-        contract.dispute,
-        )?;
-    
-        // To admin
-        token::transfer(
-        CpiContext::new_with_signer(
-            token_program.to_account_info(),
-            SplTransfer {
-                from: source.to_account_info().clone(),
-                to: admin_destination.to_account_info().clone(),
-                authority: contract.to_account_info().clone(),
+            2 => {
+                // admin agrees with buyer
+                // transfer payment to buyer and admin gets seller's dispute fee
+                contract.status = ContractStatus::Completed;
+
+                // To buyer
+                token::transfer(
+                CpiContext::new_with_signer(
+                    token_program.to_account_info(),
+                    SplTransfer {
+                        from: source.to_account_info().clone(),
+                        to: buyer_destination.to_account_info().clone(),
+                        authority: contract.to_account_info().clone(),
+                    },
+                    &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
+                ),
+                ((total_balance - 2 * contract.dispute) * 90 / 100 + contract.dispute).try_into().unwrap(),
+                )?;
+
+                // To admin
+                token::transfer(
+                CpiContext::new_with_signer(
+                    token_program.to_account_info(),
+                    SplTransfer {
+                        from: source.to_account_info().clone(),
+                        to: admin_destination.to_account_info().clone(),
+                        authority: contract.to_account_info().clone(),
+                    },
+                    &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
+                ),
+                ((total_balance - 2 * contract.dispute ) * 10 / 100 + contract.dispute).try_into().unwrap(),
+                )?;
             },
-            &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
-        ),
-        ((total_balance - 2 * contract.dispute ) * 5 / 100).try_into().unwrap(),
-        )?;
+            _ => {
+                // admin agrees with split dicision
+                // split payment and admin gets half of dispute fee from both parties
+                contract.status = ContractStatus::Completed;
+
+                // To seller
+                token::transfer(
+                CpiContext::new_with_signer(
+                    token_program.to_account_info(),
+                    SplTransfer {
+                        from: source.to_account_info().clone(),
+                        to: seller_destination.to_account_info().clone(),
+                        authority: contract.to_account_info().clone(),
+                    },
+                    &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
+                ),
+                ((total_balance - 2 * contract.dispute) * 45 / 100 + contract.dispute / 2).try_into().unwrap(),
+                )?;
+
+                // To buyer
+                token::transfer(
+                CpiContext::new_with_signer(
+                    token_program.to_account_info(),
+                    SplTransfer {
+                        from: source.to_account_info().clone(),
+                        to: buyer_destination.to_account_info().clone(),
+                        authority: contract.to_account_info().clone(),
+                    },
+                    &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
+                ),
+                ((total_balance - 2 * contract.dispute) * 45 / 100 + contract.dispute / 2).try_into().unwrap(),
+                )?;
+
+                // To admin
+                token::transfer(
+                CpiContext::new_with_signer(
+                    token_program.to_account_info(),
+                    SplTransfer {
+                        from: source.to_account_info().clone(),
+                        to: admin_destination.to_account_info().clone(),
+                        authority: contract.to_account_info().clone(),
+                    },
+                    &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
+                ),
+                ((total_balance - 2 * contract.dispute ) * 10 / 100 + contract.dispute).try_into().unwrap(),
+                )?;
+            }
+        }
    }
 
     msg!("Funds released by admin successfully!");

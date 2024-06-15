@@ -15,6 +15,8 @@ pub struct Contract {
     pub deadline: u32,
     pub amount: u64,
     pub dispute: u64,
+    pub split: bool,
+    pub seller_satisfied: bool, // regarding split decision
     pub buyer_approved: bool,
     pub seller_approved: bool,
     pub admin_approved: bool,
@@ -36,6 +38,8 @@ impl Default for Contract {
             deadline: 0,
             amount: 0,
             dispute: 0,
+            split: false,
+            seller_satisfied: false,
             buyer_approved: false,
             seller_approved: false,
             admin_approved: false,
@@ -50,5 +54,6 @@ pub enum ContractStatus {
     Created,
     Active,
     Pending,
+    Dispute,
     Completed,
 }

@@ -14,4 +14,6 @@ pub enum GigContractError {
     InvalidAmount,
     #[msg("Contract is not active yet or already completed!")]
     CantRelease,
+    #[msg("Contract is not pending or disputed yet so admin can't approve now!")]
+    NotReadyYet,
 }

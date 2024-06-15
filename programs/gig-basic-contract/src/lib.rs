@@ -36,23 +36,24 @@ pub mod gig_basic_contract {
 
     /*
         Buyer will release funds after satisfied with products seller will deliver.
+        Here, split will be true if buyer is dissatisfied
     */
-    pub fn release_funds(ctx: Context<ReleaseFundsContext>, contract_id: String,) -> Result<()> {
-        instructions::release_funds::release_funds(ctx, contract_id)
+    pub fn buyer_approve(ctx: Context<BuyerApproveContext>, contract_id: String, split: bool) -> Result<()> {
+        instructions::buyer_approve::buyer_approve(ctx, contract_id, split)
     }
 
     /*
         Admin will approve if they don't sign.
     */
-    pub fn admin_approve(ctx: Context<AdminApproveContext>, contract_id: String,) -> Result<()> {
-        instructions::admin_approve::admin_approve(ctx, contract_id)
+    pub fn admin_approve(ctx: Context<AdminApproveContext>, contract_id: String, decision: u8) -> Result<()> {
+        instructions::admin_approve::admin_approve(ctx, contract_id, decision)
     }
 
     /*
         Seller will approve the amount of funds to receive 
-        %% Actually, this is not necessary since they check and agree all conditions when starting and activating the contract %%
+        Here, seller_satisfied will be true if seller agree with split payment. Otherwise false
     */
-    pub fn seller_approve(ctx: Context<SellerApproveContext>, contract_id: String,) -> Result<()> {
-        instructions::seller_approve::seller_approve(ctx, contract_id)
+    pub fn seller_approve(ctx: Context<SellerApproveContext>, contract_id: String, seller_satisfied: bool) -> Result<()> {
+        instructions::seller_approve::seller_approve(ctx, contract_id, seller_satisfied)
     }
 }

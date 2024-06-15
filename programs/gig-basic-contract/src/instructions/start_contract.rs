@@ -20,7 +20,7 @@ pub fn start_contract(
     ctx: Context<StartContractContext>,
     contract_id: String,
     amount: u64, 
-    dispute: u64,
+    dispute: u64, // $0.5 for now
     deadline: u32,
 ) -> Result<()> {
     msg!("Creating a new contract with the following Id: {}", contract_id);
