@@ -1,0 +1,19 @@
+[features]
+seeds = false
+skip-lint = false
+
+[programs.localnet]
+gig_basic_contract = "FjPwNzWH81Gc69RruKgCeu6DZwSdSfDrXdjG84JyNS5e"
+
+[programs.devnet]
+gig_basic_contract = "63MNpbyofgGQ7xELFmwm38yq5yyzuAdMxrN43rXrizEz"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "devnet"
+wallet = "/home/rrr/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

@@ -1,0 +1,17 @@
+use anchor_lang::prelude::*;
+
+#[error_code]
+pub enum GigContractError {
+    #[msg("Invalid seller is trying to release funds!")]
+    InvalidSeller,
+    #[msg("Invalid seller is trying to activate contract!")]
+    InvalidActivator,
+    #[msg("Invalid buyer is trying to release funds!")]
+    InvalidBuyer,
+    #[msg("Invalid admin is trying to release funds!")]
+    InvalidAdmin,
+    #[msg("Amount should be bigger than 0")]
+    InvalidAmount,
+    #[msg("Contract is not active yet or already completed!")]
+    CantRelease,
+}
