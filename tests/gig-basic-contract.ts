@@ -940,7 +940,7 @@ describe("gig-basic-contract", () => {
   // });
 
   //## 3.Agree with split
-  it("3-[Success - Dispute-Agree with seller] Approve by admin!", async () => {
+  it("3-[Success - Dispute-Agree with split] Approve by admin!", async () => {
     try {
       let contractAccount = await program.account.contract.fetch(contractAddress);
       console.log("new contract before approving on admin!:", contractAccount);
