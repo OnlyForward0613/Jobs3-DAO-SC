@@ -168,6 +168,80 @@ describe("gig-basic-contract", () => {
     }
   });
 
+  // // Testing for all satisfied case
+  // it("1-[Failure-Invalid dispute amount] Create a new contract!", async () => {
+  //   try {
+  //     // Create a new uuid to use as a new contract id
+  //     contractId = uuid().slice(0, 8);
+  //     console.log("new contractId:", contractId);
+
+  //     const amount = new anchor.BN(10 * Math.pow(10, decimal)); // 10 BPT token; // 10 USDC
+  //     const dispute = new anchor.BN(0.4 * Math.pow(10, decimal)); // 0.4 BPT token; // 0.4 USDC shoulb be 50 cent
+  //     const deadline = Math.floor(Date.now() / 1000) + (10 * 24 * 60 * 60); // 10 days in seconds from Current timestamp
+
+  //     const [contract, bump] = anchor.web3.PublicKey.findProgramAddressSync(
+  //       [
+  //         Buffer.from(anchor.utils.bytes.utf8.encode(CONTRACT_SEED)),
+  //         Buffer.from(anchor.utils.bytes.utf8.encode(contractId)),
+  //       ],
+  //       program.programId
+  //     );
+
+
+  //     contractAddress = contract;
+  //     contractBump = bump;
+  //     console.log("contractAddress", contractAddress);
+  //     console.log("contractBump", contractBump);
+
+  //     contractAta = await getOrCreateAssociatedTokenAccount(
+  //       program.provider.connection,
+  //       authKp,
+  //       payTokenMint,
+  //       contractAddress,
+  //       true
+  //     );
+
+  //     // Call startContract function
+  //     const tx = await program.methods
+  //       .startContract(
+  //         contractId,
+  //         amount, 
+  //         dispute, 
+  //         deadline,
+          
+  //       )
+  //       .accounts({
+  //         buyer: firstKp.publicKey,
+  //         contract,
+  //         seller: secondKp.publicKey,
+  //         buyerAta: firstAta.address,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //         rent: SYSVAR_RENT_PUBKEY,
+  //       })
+
+  //       .signers([firstKp])
+  //       .rpc();
+  //       // .rpc({ skipPreflight: true });
+
+
+  //     console.log("Your transaction signature for creating a new contract", tx);
+
+  //     // Fetch the contract account and assert the values
+  //     const contractAccount = await program.account.contract.fetch(contract);
+
+  //     console.log("new contract account:", contractAccount);
+
+  //   } catch (error) {
+  //     // console.log("Error while creating a new contract:", error);
+  //     assert.equal(error.error.errorCode.code, "InvalidDisputeAmount");
+  //     assert.equal(error.error.errorCode.number, 6004);
+  //     assert.equal(error.error.errorMessage, "Dispute Amount should be 50 cent!");
+  //   }
+  // });
+
   // it("1-[Success] Create a new contract!", async () => {
   //   try {
   //     // Create a new uuid to use as a new contract id
@@ -175,8 +249,8 @@ describe("gig-basic-contract", () => {
   //     console.log("new contractId:", contractId);
 
   //     const amount = new anchor.BN(10 * Math.pow(10, decimal)); // 10 BPT token; // 10 USDC
-  //     const dispute = new anchor.BN(1 * Math.pow(10, decimal)); // 10 BPT token; // 10 USDC
-  //     const deadline = Math.floor(Date.now() / 1000); // + (10 * 24 * 60 * 60); // 10 days in seconds from Current timestamp
+  //     const dispute = new anchor.BN(0.5 * Math.pow(10, decimal)); // 0.5 BPT token; // 0.5 USDC 50 cent
+  //     const deadline = Math.floor(Date.now() / 1000) + (10 * 24 * 60 * 60); // 10 days in seconds from Current timestamp
 
   //     const [contract, bump] = anchor.web3.PublicKey.findProgramAddressSync(
   //       [
@@ -274,7 +348,7 @@ describe("gig-basic-contract", () => {
   //     console.log("new contract before approving on buyer!:", contractAccount);
 
   //     const tx = await program.methods
-  //       .releaseFunds(contractId)
+  //       .buyerApprove(contractId, false)
   //       .accounts({
   //         contract: contractAddress,
   //         buyer: secondKp.publicKey,
@@ -302,13 +376,13 @@ describe("gig-basic-contract", () => {
   //   }
   // });
 
-  // it("1-[Success] Approve by buyer(client)!", async () => {
+  // it("1-[Success-Satisfied(no split)] Approve by buyer(client)!", async () => {
   //   try {
   //     let contractAccount = await program.account.contract.fetch(contractAddress);
   //     console.log("new contract before approving on buyer!:", contractAccount);
 
   //     const tx = await program.methods
-  //       .releaseFunds(contractId)
+  //       .buyerApprove(contractId, false)
   //       .accounts({
   //         contract: contractAddress,
   //         buyer: firstKp.publicKey,
@@ -339,7 +413,7 @@ describe("gig-basic-contract", () => {
   //     console.log("new contract before approving on seller!:", contractAccount);
 
   //     const tx = await program.methods
-  //       .sellerApprove(contractId)
+  //       .sellerApprove(contractId, false)
   //       .accounts({
   //         contract: contractAddress,
   //         seller: firstKp.publicKey,
@@ -367,81 +441,215 @@ describe("gig-basic-contract", () => {
   //   }
   // });
 
-  it("1-[Success] Approve by seller(freelancer)!", async () => {
-    try {
-      let contractAccount = await program.account.contract.fetch(contractAddress);
-      console.log("new contract before approving on seller!:", contractAccount);
+  // it("1-[Success-No split] Approve by seller(freelancer)!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.contract.fetch(contractAddress);
+  //     console.log("new contract before approving on seller!:", contractAccount);
 
-      const tx = await program.methods
-        .sellerApprove(contractId)
-        .accounts({
-          contract: contractAddress,
-          seller: secondKp.publicKey,
-          sellerAta: secondAta.address,
-          buyerAta: firstAta.address,
-          adminAta: authAta.address,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([secondKp])
-        .rpc();
+  //     const tx = await program.methods
+  //       .sellerApprove(contractId, false)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         seller: secondKp.publicKey,
+  //         sellerAta: secondAta.address,
+  //         buyerAta: firstAta.address,
+  //         adminAta: authAta.address,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([secondKp])
+  //       .rpc();
 
-      console.log("Your transaction signature for approving on seller:", tx);
+  //     console.log("Your transaction signature for approving on seller:", tx);
    
-      contractAccount = await program.account.contract.fetch(contractAddress);
+  //     contractAccount = await program.account.contract.fetch(contractAddress);
 
-      console.log("new contract after approving on seller!:", contractAccount);
-    } catch (error) {
-      console.log("Error while approving on seller!:", error);
-    }
-  });
+  //     console.log("new contract after approving on seller!:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while approving on seller!:", error);
+  //   }
+  // });
 
-  it("1-[Failure] Approve by admin!", async () => {
-    try {
-      let contractAccount = await program.account.contract.fetch(contractAddress);
-      console.log("new contract before approving on admin!:", contractAccount);
+  // it("1-[Failure] Approve by admin!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.contract.fetch(contractAddress);
+  //     console.log("new contract before approving on admin!:", contractAccount);
 
-      const tx = await program.methods
-        .adminApprove(contractId)
-        .accounts({
-          contract: contractAddress,
-          admin: authKp.publicKey,
-          sellerAta: secondAta.address,
-          buyerAta: firstAta.address,
-          adminAta: authAta.address,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([authKp])
-        .rpc();
+  //     const tx = await program.methods
+  //       .adminApprove(contractId, 0)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         admin: authKp.publicKey,
+  //         sellerAta: secondAta.address,
+  //         buyerAta: firstAta.address,
+  //         adminAta: authAta.address,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([authKp])
+  //       .rpc();
 
-      console.log("Your transaction signature for approving on admin:", tx);
+  //     console.log("Your transaction signature for approving on admin:", tx);
    
-      contractAccount = await program.account.contract.fetch(contractAddress);
+  //     contractAccount = await program.account.contract.fetch(contractAddress);
 
-      console.log("new contract after approving on admin!:", contractAccount);
-    } catch (error) {
-      // console.log("Error while approving on admin!:", error);
-      assert.equal(error.error.errorCode.code, "CantRelease");
-      assert.equal(error.error.errorCode.number, 6005);
-      assert.equal(error.error.errorMessage, "Contract is not active yet or already completed!");
-    }
-  });
+  //     console.log("new contract after approving on admin!:", contractAccount);
+  //   } catch (error) {
+  //     // console.log("Error while approving on admin!:", error);
+  //     assert.equal(error.error.errorCode.code, "NotReadyYet");
+  //     assert.equal(error.error.errorCode.number, 6006);
+  //     assert.equal(error.error.errorMessage, "Contract is not pending or disputed yet so admin can't approve now or already completed!");
+  //   }
+  // });
 
-  // Second creating for testing success case for admin approval and failure case for both parties' approval
-  it("2-[Success] Create a new contract!", async () => {
+  // // Testing for invalid seller activate
+  // it("2-[Success] Create a new contract!", async () => {
+  //   try {
+  //     // Create a new uuid to use as a new contract id
+  //     contractId = uuid().slice(0, 8);
+  //     console.log("new contractId:", contractId);
+
+  //     const amount = new anchor.BN(10 * Math.pow(10, decimal)); // 10 BPT token; // 10 USDC
+  //     const dispute = new anchor.BN(0.5 * Math.pow(10, decimal)); // 0.5 BPT token; // 0.5 USDC
+  //     const deadline = Math.floor(Date.now() / 1000); // + (10 * 24 * 60 * 60); // 10 days in seconds from Current timestamp
+
+  //     const [contract, bump] = anchor.web3.PublicKey.findProgramAddressSync(
+  //       [
+  //         Buffer.from(anchor.utils.bytes.utf8.encode(CONTRACT_SEED)),
+  //         Buffer.from(anchor.utils.bytes.utf8.encode(contractId)),
+  //       ],
+  //       program.programId
+  //     );
+
+
+  //     contractAddress = contract;
+  //     contractBump = bump;
+  //     console.log("contractAddress", contractAddress);
+  //     console.log("contractBump", contractBump);
+
+  //     contractAta = await getOrCreateAssociatedTokenAccount(
+  //       program.provider.connection,
+  //       authKp,
+  //       payTokenMint,
+  //       contractAddress,
+  //       true
+  //     );
+
+  //     // Call startContract function
+  //     const tx = await program.methods
+  //       .startContract(
+  //         contractId,
+  //         amount, 
+  //         dispute, 
+  //         deadline,
+          
+  //       )
+  //       .accounts({
+  //         buyer: firstKp.publicKey,
+  //         contract,
+  //         seller: secondKp.publicKey,
+  //         buyerAta: firstAta.address,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //         rent: SYSVAR_RENT_PUBKEY,
+  //       })
+
+  //       .signers([firstKp])
+  //       .rpc();
+  //       // .rpc({ skipPreflight: true });
+
+
+  //     console.log("Your transaction signature for creating a new contract", tx);
+
+  //     // Fetch the contract account and assert the values
+  //     const contractAccount = await program.account.contract.fetch(contract);
+
+  //     console.log("new contract account:", contractAccount);
+
+  //   } catch (error) {
+  //     console.log("Error while creating a new contract:", error);
+  //   }
+  // });
+
+  // it("2-[Failure-invalid seller-activate] Activate the contract!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.contract.fetch(contractAddress);
+  //     console.log("new contract before activating:", contractAccount);
+
+  //     // Call the buy_tickets function
+  //     const tx = await program.methods
+  //       .activateContract(contractId)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         seller: firstKp.publicKey,
+  //         sellerAta: firstAta.address,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([firstKp])
+  //       .rpc();
+
+  //     console.log("Your transaction signature for activating the contract:", tx);
+   
+  //     contractAccount = await program.account.contract.fetch(contractAddress);
+
+  //     console.log("new contract after activating:", contractAccount);
+  //   } catch (error) {
+  //     // console.log("Error while activating contract!:", error);
+  //     assert.equal(error.error.errorCode.code, "InvalidActivator");
+  //     assert.equal(error.error.errorCode.number, 6001);
+  //     assert.equal(error.error.errorMessage, "Invalid seller is trying to activate contract!");
+  //   }
+  // });
+
+  // it("2-[Success] Activate the contract!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.contract.fetch(contractAddress);
+  //     console.log("new contract before activating:", contractAccount);
+
+  //     // Call the buy_tickets function
+  //     const tx = await program.methods
+  //       .activateContract(contractId)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         seller: secondKp.publicKey,
+  //         sellerAta: secondAta.address,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([secondKp])
+  //       .rpc({ skipPreflight: true });
+
+  //     console.log("Your transaction signature for activating the contract:", tx);
+   
+  //     contractAccount = await program.account.contract.fetch(contractAddress);
+
+  //     console.log("new contract after activating:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while activating contract!:", error);
+  //   }
+  // });
+
+  // Testing dispute cases
+  it("3-[Success] Create a new contract!", async () => {
     try {
       // Create a new uuid to use as a new contract id
       contractId = uuid().slice(0, 8);
       console.log("new contractId:", contractId);
 
       const amount = new anchor.BN(10 * Math.pow(10, decimal)); // 10 BPT token; // 10 USDC
-      const dispute = new anchor.BN(1 * Math.pow(10, decimal)); // 10 BPT token; // 10 USDC
-      const deadline = Math.floor(Date.now() / 1000); // + (10 * 24 * 60 * 60); // 10 days in seconds from Current timestamp
+      const dispute = new anchor.BN(0.5 * Math.pow(10, decimal)); // 0.5 BPT token; // 0.5 USDC 50 cent
+      const deadline = Math.floor(Date.now() / 1000) + (10 * 24 * 60 * 60); // 10 days in seconds from Current timestamp
 
       const [contract, bump] = anchor.web3.PublicKey.findProgramAddressSync(
         [
@@ -503,40 +711,7 @@ describe("gig-basic-contract", () => {
     }
   });
 
-  it("2-[Failure-invalid seller-activate] Activate the contract!", async () => {
-    try {
-      let contractAccount = await program.account.contract.fetch(contractAddress);
-      console.log("new contract before activating:", contractAccount);
-
-      // Call the buy_tickets function
-      const tx = await program.methods
-        .activateContract(contractId)
-        .accounts({
-          contract: contractAddress,
-          seller: firstKp.publicKey,
-          sellerAta: firstAta.address,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([firstKp])
-        .rpc();
-
-      console.log("Your transaction signature for activating the contract:", tx);
-   
-      contractAccount = await program.account.contract.fetch(contractAddress);
-
-      console.log("new contract after activating:", contractAccount);
-    } catch (error) {
-      // console.log("Error while activating contract!:", error);
-      assert.equal(error.error.errorCode.code, "InvalidActivator");
-      assert.equal(error.error.errorCode.number, 6001);
-      assert.equal(error.error.errorMessage, "Invalid seller is trying to activate contract!");
-    }
-  });
-
-  it("2-[Success] Activate the contract!", async () => {
+  it("3-[Success] Activate the contract!", async () => {
     try {
       let contractAccount = await program.account.contract.fetch(contractAddress);
       console.log("new contract before activating:", contractAccount);
@@ -566,16 +741,16 @@ describe("gig-basic-contract", () => {
     }
   });
 
-  it("2-[Failure-invalid admin] Approve by admin!", async () => {
+  it("3-[Success-Dissatisfied(split)] Approve by buyer(client)!", async () => {
     try {
       let contractAccount = await program.account.contract.fetch(contractAddress);
-      console.log("new contract before approving on admin!:", contractAccount);
+      console.log("new contract before approving on buyer!:", contractAccount);
 
       const tx = await program.methods
-        .adminApprove(contractId)
+        .buyerApprove(contractId, true)
         .accounts({
           contract: contractAddress,
-          admin: firstKp.publicKey,
+          buyer: firstKp.publicKey,
           sellerAta: secondAta.address,
           buyerAta: firstAta.address,
           adminAta: authAta.address,
@@ -585,28 +760,193 @@ describe("gig-basic-contract", () => {
           systemProgram: anchor.web3.SystemProgram.programId,
         })
         .signers([firstKp])
-        .rpc();
+        .rpc({ skipPreflight: true });
 
-      console.log("Your transaction signature for approving on admin:", tx);
+      console.log("Your transaction signature for approving on buyer:", tx);
    
       contractAccount = await program.account.contract.fetch(contractAddress);
 
-      console.log("new contract after approving on admin!:", contractAccount);
+      console.log("new contract after approving on buyer!:", contractAccount);
     } catch (error) {
-      // console.log("Error while approving on admin!:", error);
-      assert.equal(error.error.errorCode.code, "InvalidAdmin");
-      assert.equal(error.error.errorCode.number, 6003);
-      assert.equal(error.error.errorMessage, "Invalid admin is trying to release funds!");
+      console.log("Error while approving on buyer!:", error);
     }
   });
 
-  it("2-[Success] Approve by admin!", async () => {
+  // // 1 - Agree with split
+  // it("3-[Success-Agree with split] Approve by seller(freelancer)!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.contract.fetch(contractAddress);
+  //     console.log("new contract before approving on seller!:", contractAccount);
+
+  //     const tx = await program.methods
+  //       .sellerApprove(contractId, true)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         seller: secondKp.publicKey,
+  //         sellerAta: secondAta.address,
+  //         buyerAta: firstAta.address,
+  //         adminAta: authAta.address,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([secondKp])
+  //       .rpc();
+
+  //     console.log("Your transaction signature for approving on seller:", tx);
+   
+  //     contractAccount = await program.account.contract.fetch(contractAddress);
+
+  //     console.log("new contract after approving on seller!:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while approving on seller!:", error);
+  //   }
+  // });
+
+  //## - Disagree with split so dispute
+  it("3-[Success-Disagree with split] Approve by seller(freelancer)!", async () => {
+    try {
+      let contractAccount = await program.account.contract.fetch(contractAddress);
+      console.log("new contract before approving on seller!:", contractAccount);
+
+      const tx = await program.methods
+        .sellerApprove(contractId, false)
+        .accounts({
+          contract: contractAddress,
+          seller: secondKp.publicKey,
+          sellerAta: secondAta.address,
+          buyerAta: firstAta.address,
+          adminAta: authAta.address,
+          contractAta: contractAta.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([secondKp])
+        .rpc();
+
+      console.log("Your transaction signature for approving on seller:", tx);
+   
+      contractAccount = await program.account.contract.fetch(contractAddress);
+
+      console.log("new contract after approving on seller!:", contractAccount);
+    } catch (error) {
+      console.log("Error while approving on seller!:", error);
+    }
+  });
+  // //## Invalid admin test
+  // it("3-[Failure-invalid admin] Approve by admin!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.contract.fetch(contractAddress);
+  //     console.log("new contract before approving on admin!:", contractAccount);
+
+  //     const tx = await program.methods
+  //       .adminApprove(contractId, 0)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         admin: firstKp.publicKey,
+  //         sellerAta: secondAta.address,
+  //         buyerAta: firstAta.address,
+  //         adminAta: authAta.address,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([firstKp])
+  //       .rpc();
+
+  //     console.log("Your transaction signature for approving on admin:", tx);
+   
+  //     contractAccount = await program.account.contract.fetch(contractAddress);
+
+  //     console.log("new contract after approving on admin!:", contractAccount);
+  //   } catch (error) {
+  //     // console.log("Error while approving on admin!:", error);
+  //     assert.equal(error.error.errorCode.code, "InvalidAdmin");
+  //     assert.equal(error.error.errorCode.number, 6003);
+  //     assert.equal(error.error.errorMessage, "Invalid admin is trying to release funds!");
+  //   }
+  // });
+  // //## 1.Agree with seller
+  // it("3-[Success - Dispute-Agree with seller] Approve by admin!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.contract.fetch(contractAddress);
+  //     console.log("new contract before approving on admin!:", contractAccount);
+
+  //     const tx = await program.methods
+  //       .adminApprove(contractId, 1)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         admin: authKp.publicKey,
+  //         sellerAta: secondAta.address,
+  //         buyerAta: firstAta.address,
+  //         adminAta: authAta.address,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([authKp])
+  //       .rpc();
+
+  //     console.log("Your transaction signature for approving on admin:", tx);
+   
+  //     contractAccount = await program.account.contract.fetch(contractAddress);
+
+  //     console.log("new contract after approving on admin!:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while approving on admin!:", error);
+  //     assert.equal(error.error.errorCode.code, "InsufficientFunds");
+  //     assert.equal(error.error.errorCode.number, 6000);
+  //     assert.equal(error.error.errorMessage, "user insufficient funds");
+  //   }
+  // });
+
+  // //## 2.Agree with buyer
+  // it("3-[Success - Dispute-Agree with buyer] Approve by admin!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.contract.fetch(contractAddress);
+  //     console.log("new contract before approving on admin!:", contractAccount);
+
+  //     const tx = await program.methods
+  //       .adminApprove(contractId, 2)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         admin: authKp.publicKey,
+  //         sellerAta: secondAta.address,
+  //         buyerAta: firstAta.address,
+  //         adminAta: authAta.address,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([authKp])
+  //       .rpc();
+
+  //     console.log("Your transaction signature for approving on admin:", tx);
+   
+  //     contractAccount = await program.account.contract.fetch(contractAddress);
+
+  //     console.log("new contract after approving on admin!:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while approving on admin!:", error);
+  //     assert.equal(error.error.errorCode.code, "InsufficientFunds");
+  //     assert.equal(error.error.errorCode.number, 6000);
+  //     assert.equal(error.error.errorMessage, "user insufficient funds");
+  //   }
+  // });
+
+  //## 3.Agree with split
+  it("3-[Success - Dispute-Agree with seller] Approve by admin!", async () => {
     try {
       let contractAccount = await program.account.contract.fetch(contractAddress);
       console.log("new contract before approving on admin!:", contractAccount);
 
       const tx = await program.methods
-        .adminApprove(contractId)
+        .adminApprove(contractId, 3)
         .accounts({
           contract: contractAddress,
           admin: authKp.publicKey,
@@ -631,74 +971,6 @@ describe("gig-basic-contract", () => {
       assert.equal(error.error.errorCode.code, "InsufficientFunds");
       assert.equal(error.error.errorCode.number, 6000);
       assert.equal(error.error.errorMessage, "user insufficient funds");
-    }
-  });
-
-  it("2-[Failure] Approve by buyer(client)!", async () => {
-    try {
-      let contractAccount = await program.account.contract.fetch(contractAddress);
-      console.log("new contract before approving on buyer!:", contractAccount);
-
-      const tx = await program.methods
-        .releaseFunds(contractId)
-        .accounts({
-          contract: contractAddress,
-          buyer: firstKp.publicKey,
-          sellerAta: secondAta.address,
-          buyerAta: firstAta.address,
-          adminAta: authAta.address,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([firstKp])
-        .rpc();
-
-      console.log("Your transaction signature for approving on buyer:", tx);
-   
-      contractAccount = await program.account.contract.fetch(contractAddress);
-
-      console.log("new contract after approving on buyer!:", contractAccount);
-    } catch (error) {
-      // console.log("Error while approving on buyer!:", error);
-      assert.equal(error.error.errorCode.code, "CantRelease");
-      assert.equal(error.error.errorCode.number, 6005);
-      assert.equal(error.error.errorMessage, "Contract is not active yet or already completed!");
-    }
-  });
-
-  it("2-[Failure] Approve by seller(freelancer)!", async () => {
-    try {
-      let contractAccount = await program.account.contract.fetch(contractAddress);
-      console.log("new contract before approving on seller!:", contractAccount);
-
-      const tx = await program.methods
-        .sellerApprove(contractId)
-        .accounts({
-          contract: contractAddress,
-          seller: secondKp.publicKey,
-          sellerAta: secondAta.address,
-          buyerAta: firstAta.address,
-          adminAta: authAta.address,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([secondKp])
-        .rpc();
-
-      console.log("Your transaction signature for approving on seller:", tx);
-   
-      contractAccount = await program.account.contract.fetch(contractAddress);
-
-      console.log("new contract after approving on seller!:", contractAccount);
-    } catch (error) {
-      // console.log("Error while approving on seller!:", error);
-      assert.equal(error.error.errorCode.code, "CantRelease");
-      assert.equal(error.error.errorCode.number, 6005);
-      assert.equal(error.error.errorMessage, "Contract is not active yet or already completed!");
     }
   });
 });

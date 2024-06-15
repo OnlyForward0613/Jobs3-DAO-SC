@@ -10,10 +10,10 @@ pub enum GigContractError {
     InvalidBuyer,
     #[msg("Invalid admin is trying to release funds!")]
     InvalidAdmin,
-    #[msg("Amount should be bigger than 0")]
-    InvalidAmount,
+    #[msg("Dispute Amount should be 50 cent!")]
+    InvalidDisputeAmount,
     #[msg("Contract is not active yet or already completed!")]
     CantRelease,
-    #[msg("Contract is not pending or disputed yet so admin can't approve now!")]
+    #[msg("Contract is not pending or disputed yet so admin can't approve now or already completed!")]
     NotReadyYet,
 }

@@ -25,6 +25,9 @@ pub fn start_contract(
 ) -> Result<()> {
     msg!("Creating a new contract with the following Id: {}", contract_id);
 
+    // Check if the contract is pending which means one of two parties approved.
+    require!(dispute == (0.5 * f64::powi(10.0, 8)).round() as u64 , GigContractError::InvalidDisputeAmount);
+    
     let contract = &mut ctx.accounts.contract;
     let current_timestamp = Clock::get()?.unix_timestamp as u32;
     let token_program = &ctx.accounts.token_program;
