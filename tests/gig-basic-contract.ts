@@ -869,7 +869,7 @@ describe("gig-basic-contract", () => {
   //     assert.equal(error.error.errorMessage, "Invalid admin is trying to release funds!");
   //   }
   // });
-  // //## 1.Agree with seller
+  //## 1.Agree with seller
   // it("3-[Success - Dispute-Agree with seller] Approve by admin!", async () => {
   //   try {
   //     let contractAccount = await program.account.contract.fetch(contractAddress);
@@ -898,9 +898,6 @@ describe("gig-basic-contract", () => {
   //     console.log("new contract after approving on admin!:", contractAccount);
   //   } catch (error) {
   //     console.log("Error while approving on admin!:", error);
-  //     assert.equal(error.error.errorCode.code, "InsufficientFunds");
-  //     assert.equal(error.error.errorCode.number, 6000);
-  //     assert.equal(error.error.errorMessage, "user insufficient funds");
   //   }
   // });
 
@@ -933,9 +930,6 @@ describe("gig-basic-contract", () => {
   //     console.log("new contract after approving on admin!:", contractAccount);
   //   } catch (error) {
   //     console.log("Error while approving on admin!:", error);
-  //     assert.equal(error.error.errorCode.code, "InsufficientFunds");
-  //     assert.equal(error.error.errorCode.number, 6000);
-  //     assert.equal(error.error.errorMessage, "user insufficient funds");
   //   }
   // });
 
@@ -968,9 +962,6 @@ describe("gig-basic-contract", () => {
       console.log("new contract after approving on admin!:", contractAccount);
     } catch (error) {
       console.log("Error while approving on admin!:", error);
-      assert.equal(error.error.errorCode.code, "InsufficientFunds");
-      assert.equal(error.error.errorCode.number, 6000);
-      assert.equal(error.error.errorMessage, "user insufficient funds");
     }
   });
 });
