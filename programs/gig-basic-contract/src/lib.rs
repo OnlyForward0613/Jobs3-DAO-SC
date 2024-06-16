@@ -43,7 +43,8 @@ pub mod gig_basic_contract {
     }
 
     /*
-        Admin will approve if they don't sign.
+        Admin will approve if there is a dispute.
+        decision value: 0 for both ok by default, 1 for seller, 2 for buyer, 3 for split
     */
     pub fn admin_approve(ctx: Context<AdminApproveContext>, contract_id: String, decision: u8) -> Result<()> {
         instructions::admin_approve::admin_approve(ctx, contract_id, decision)
