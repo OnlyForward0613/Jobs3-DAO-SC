@@ -16,4 +16,6 @@ pub enum GigContractError {
     CantRelease,
     #[msg("Contract is not pending or disputed yet so admin can't approve now or already completed!")]
     NotReadyYet,
+    #[msg("Invalid payment token!")]
+    PayTokenMintError
 }

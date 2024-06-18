@@ -6,7 +6,7 @@ skip-lint = false
 gig_basic_contract = "FjPwNzWH81Gc69RruKgCeu6DZwSdSfDrXdjG84JyNS5e"
 
 [programs.devnet]
-gig_basic_contract = "EA77j1e7YFEr5qVR17vdcNsAsN4rQKyQbBgZLSF7chZJ"
+gig_basic_contract = "D6a3MwZXtduiRS56F5XGXfSGKkCXxLSbLy7FTVtN4T74"
 
 [programs.mainnet]
 gig_basic_contract = "EA77j1e7YFEr5qVR17vdcNsAsN4rQKyQbBgZLSF7chZJ"
@@ -15,7 +15,7 @@ gig_basic_contract = "EA77j1e7YFEr5qVR17vdcNsAsN4rQKyQbBgZLSF7chZJ"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "mainnet"
+cluster = "devnet"
 wallet = "/home/rrr/.config/solana/id.json"
 
 [scripts]

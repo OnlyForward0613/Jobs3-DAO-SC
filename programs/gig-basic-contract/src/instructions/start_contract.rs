@@ -25,9 +25,11 @@ pub fn start_contract(
 ) -> Result<()> {
     msg!("Creating a new contract with the following Id: {}", contract_id);
 
+    require_keys_eq!(ctx.accounts.pay_token_mint.key(), PAY_TOKEN_MINT_ADDRESS, GigContractError::PayTokenMintError);
+
     // Check if the contract is pending which means one of two parties approved.
     // powi(10.0, 6) for USDC, powi(10.0, 8) for BPT for test
-    require!(dispute == (0.5 * f64::powi(10.0, 6)).round() as u64 , GigContractError::InvalidDisputeAmount);
+    require!(dispute == (0.5 * f64::powi(10.0, 8)).round() as u64 , GigContractError::InvalidDisputeAmount);
     
     let contract = &mut ctx.accounts.contract;
     let current_timestamp = Clock::get()?.unix_timestamp as u32;
@@ -82,17 +84,19 @@ pub struct StartContractContext<'info> {
 
     pub seller: SystemAccount<'info>,
 
+    pub pay_token_mint: Account<'info, Mint>,
+    
     #[account(
         mut, 
-        associated_token::mint = PAY_TOKEN_MINT_ADDRESS,
+        associated_token::mint = pay_token_mint,
         associated_token::authority = buyer,
     )]
     pub buyer_ata: Account<'info, TokenAccount>,
 
-
     #[account(
-        mut,
-        associated_token::mint = PAY_TOKEN_MINT_ADDRESS,
+        init_if_needed,
+        payer = buyer,
+        associated_token::mint = pay_token_mint,
         associated_token::authority = contract,
     )]
     pub contract_ata: Account<'info, TokenAccount>,
