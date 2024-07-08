@@ -20,18 +20,27 @@ pub mod gig_basic_contract {
     /* 
         Buyer will start a working contract between buyer and seller 
         by calling this function with payment amount and dispute fee. 
+        Or Seller will start by calling this function wiht just dispute fee.
     */
     
-    pub fn start_contract(ctx: Context<StartContractContext>, contract_id: String, amount: u64, dispute: u64, deadline: u32) -> Result<()> {
-        instructions::start_contract::start_contract(ctx, contract_id, amount, dispute, deadline)
+    pub fn start_contract(ctx: Context<StartContractContext>, contract_id: String, amount: u64, dispute: u64, deadline: u32, on_buyer: bool) -> Result<()> {
+        instructions::start_contract::start_contract(ctx, contract_id, amount, dispute, deadline, on_buyer)
+    }
+
+    /* 
+        Buyer will accept the contract after buyer creates a new contract.
+        by calling this function with payment amount and dispute fee. 
+    */
+    pub fn accept_contract(ctx: Context<AcceptContractContext>, contract_id: String,) -> Result<()> {
+        instructions::accept_contract::accept_contract(ctx, contract_id)
     }
 
     /* 
         Seller will activate the contract after checking all conditions that buyer set 
         when creating the contract.
     */
-    pub fn activate_contract(ctx: Context<ActivateContractContext>, contract_id: String,) -> Result<()> {
-        instructions::activate_contract::activate_contract(ctx, contract_id)
+    pub fn activate_contract(ctx: Context<ActivateContractContext>, contract_id: String, with_dispute: bool) -> Result<()> {
+        instructions::activate_contract::activate_contract(ctx, contract_id, with_dispute)
     }
 
     /*

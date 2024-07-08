@@ -15,48 +15,45 @@ use crate::errors::{
 };
 
 
-pub fn activate_contract(
-    ctx: Context<ActivateContractContext>,
+pub fn accept_contract(
+    ctx: Context<AcceptContractContext>,
     contract_id: String,
-    with_dispute: bool,
 ) -> Result<()> {
-    msg!("Activating contact on seller side!");
+    msg!("Accepting contact on buyer side!");
     let contract = &mut ctx.accounts.contract;
 
-    // Check if the signer is a correct seller
-    require_keys_eq!(ctx.accounts.seller.key(), contract.seller, GigContractError::InvalidActivator);
+    // Check if the signer is a correct buyer
+    require_keys_eq!(ctx.accounts.buyer.key(), contract.buyer, GigContractError::InvalidActivator);
 
     let token_program = &ctx.accounts.token_program;
-    let authority = &ctx.accounts.seller;
-    let source = &ctx.accounts.seller_ata;
+    let authority = &ctx.accounts.buyer;
+    let source = &ctx.accounts.buyer_ata;
     let destination = &ctx.accounts.contract_ata;
 
-    contract.status = ContractStatus::Active;
+    contract.status = ContractStatus::Accepted;
 
-    if with_dispute ==  true {
-         // Transfer paytoken(dispute) to the contract account
-        token::transfer(
-            CpiContext::new(
-                token_program.to_account_info(),
-                SplTransfer {
-                    from: source.to_account_info().clone(),
-                    to: destination.to_account_info().clone(),
-                    authority: authority.to_account_info().clone(),
-                },
-            ),
-            contract.dispute,
-        )?;
-    }
+    // Transfer paytoken(amount + dispute) to the contract account
+    token::transfer(
+    CpiContext::new(
+        token_program.to_account_info(),
+        SplTransfer {
+            from: source.to_account_info().clone(),
+            to: destination.to_account_info().clone(),
+            authority: authority.to_account_info().clone(),
+        },
+    ),
+    (contract.amount + contract.dispute).try_into().unwrap(),
+    )?;
 
-    msg!("Contract activated successfully!");
+    msg!("Contract accepted successfully!");
     Ok(())
 }
 
 #[derive(Accounts)]
 #[instruction(contract_id: String)]
-pub struct ActivateContractContext<'info> {
+pub struct AcceptContractContext<'info> {
     #[account(mut)]
-    pub seller: Signer<'info>,
+    pub buyer: Signer<'info>,
 
     #[account(
         mut, 
@@ -71,9 +68,9 @@ pub struct ActivateContractContext<'info> {
     #[account(
         mut, 
         associated_token::mint = PAY_TOKEN_MINT_ADDRESS,
-        associated_token::authority = seller,
+        associated_token::authority = buyer,
     )]
-    pub seller_ata: Account<'info, TokenAccount>,
+    pub buyer_ata: Account<'info, TokenAccount>,
 
 
     #[account(

@@ -22,6 +22,7 @@ pub fn start_contract(
     amount: u64, 
     dispute: u64, // $0.5 for now
     deadline: u32,
+    on_buyer: bool,
 ) -> Result<()> {
     msg!("Creating a new contract with the following Id: {}", contract_id);
 
@@ -47,18 +48,33 @@ pub fn start_contract(
     contract.deadline = deadline;
     contract.status = ContractStatus::Created;
 
-    // Transfer paytoken(amount + dispute) to the contract account
-    token::transfer(
-    CpiContext::new(
-        token_program.to_account_info(),
-        SplTransfer {
-            from: source.to_account_info().clone(),
-            to: destination.to_account_info().clone(),
-            authority: authority.to_account_info().clone(),
-        },
-    ),
-    (amount + dispute).try_into().unwrap(),
-    )?;
+    if on_buyer == true {
+        // Transfer paytoken(amount + dispute) to the contract account
+        token::transfer(
+            CpiContext::new(
+                token_program.to_account_info(),
+                SplTransfer {
+                    from: source.to_account_info().clone(),
+                    to: destination.to_account_info().clone(),
+                    authority: authority.to_account_info().clone(),
+                },
+            ),
+            (amount + dispute).try_into().unwrap(),
+        )?;
+    } else {
+        // Transfer paytoken(dispute) to the contract account
+        token::transfer(
+            CpiContext::new(
+                token_program.to_account_info(),
+                SplTransfer {
+                    from: source.to_account_info().clone(),
+                    to: destination.to_account_info().clone(),
+                    authority: authority.to_account_info().clone(),
+                },
+            ),
+            dispute,
+        )?;
+    }
   
     msg!("New contract created successfully!");
     Ok(())

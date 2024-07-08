@@ -53,6 +53,7 @@ pub enum ContractStatus {
     NoExist,
     Created,
     Active,
+    Accepted,
     Pending,
     Dispute,
     Completed,
