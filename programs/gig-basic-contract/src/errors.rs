@@ -4,8 +4,10 @@ use anchor_lang::prelude::*;
 pub enum GigContractError {
     #[msg("Invalid seller is trying to release funds!")]
     InvalidSeller,
-    #[msg("Invalid seller or buyer is trying to activate contract!")]
+    #[msg("Invalid seller is trying to activate contract!")]
     InvalidActivator,
+    #[msg("Invalid buyer is trying to accept contract!")]
+    InvalidAcceptor,
     #[msg("Invalid buyer is trying to release funds!")]
     InvalidBuyer,
     #[msg("Invalid admin is trying to release funds!")]
