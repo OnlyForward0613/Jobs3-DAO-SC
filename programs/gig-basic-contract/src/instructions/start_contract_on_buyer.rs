@@ -16,13 +16,12 @@ use crate::errors::{
 };
 
 
-pub fn start_contract(
-    ctx: Context<StartContractContext>,
+pub fn start_contract_on_buyer(
+    ctx: Context<StartContractOnBuyerContext>,
     contract_id: String,
     amount: u64, 
     dispute: u64, // $0.5 for now
     deadline: u32,
-    on_buyer: bool,
 ) -> Result<()> {
     msg!("Creating a new contract with the following Id: {}", contract_id);
 
@@ -48,41 +47,26 @@ pub fn start_contract(
     contract.deadline = deadline;
     contract.status = ContractStatus::Created;
 
-    if on_buyer == true {
-        // Transfer paytoken(amount + dispute) to the contract account
-        token::transfer(
-            CpiContext::new(
-                token_program.to_account_info(),
-                SplTransfer {
-                    from: source.to_account_info().clone(),
-                    to: destination.to_account_info().clone(),
-                    authority: authority.to_account_info().clone(),
-                },
-            ),
-            (amount + dispute).try_into().unwrap(),
-        )?;
-    } else {
-        // Transfer paytoken(dispute) to the contract account
-        token::transfer(
-            CpiContext::new(
-                token_program.to_account_info(),
-                SplTransfer {
-                    from: source.to_account_info().clone(),
-                    to: destination.to_account_info().clone(),
-                    authority: authority.to_account_info().clone(),
-                },
-            ),
-            dispute,
-        )?;
-    }
+    // Transfer paytoken(amount + dispute) to the contract account
+    token::transfer(
+        CpiContext::new(
+            token_program.to_account_info(),
+            SplTransfer {
+                from: source.to_account_info().clone(),
+                to: destination.to_account_info().clone(),
+                authority: authority.to_account_info().clone(),
+            },
+        ),
+        (amount + dispute).try_into().unwrap(),
+    )?;
   
-    msg!("New contract created successfully!");
+    msg!("New contract created successfully on buyer side!");
     Ok(())
 }
 
 #[derive(Accounts)]
 #[instruction(contract_id: String)]
-pub struct StartContractContext<'info> {
+pub struct StartContractOnBuyerContext<'info> {
     #[account(mut)]
     pub buyer: Signer<'info>,
 

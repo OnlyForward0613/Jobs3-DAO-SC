@@ -15,8 +15,8 @@ use crate::errors::{
 };
 
 
-pub fn accept_contract(
-    ctx: Context<AcceptContractContext>,
+pub fn accept_contract_on_buyer(
+    ctx: Context<AcceptContractOnBuyerContext>,
     contract_id: String,
 ) -> Result<()> {
     msg!("Accepting contact on buyer side!");
@@ -51,7 +51,7 @@ pub fn accept_contract(
 
 #[derive(Accounts)]
 #[instruction(contract_id: String)]
-pub struct AcceptContractContext<'info> {
+pub struct AcceptContractOnBuyerContext<'info> {
     #[account(mut)]
     pub buyer: Signer<'info>,
 

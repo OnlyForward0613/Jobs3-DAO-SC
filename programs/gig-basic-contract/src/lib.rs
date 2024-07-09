@@ -20,19 +20,26 @@ pub mod gig_basic_contract {
     /* 
         Buyer will start a working contract between buyer and seller 
         by calling this function with payment amount and dispute fee. 
-        Or Seller will start by calling this function wiht just dispute fee.
     */
     
-    pub fn start_contract(ctx: Context<StartContractContext>, contract_id: String, amount: u64, dispute: u64, deadline: u32, on_buyer: bool) -> Result<()> {
-        instructions::start_contract::start_contract(ctx, contract_id, amount, dispute, deadline, on_buyer)
+    pub fn start_contract_on_buyer(ctx: Context<StartContractOnBuyerContext>, contract_id: String, amount: u64, dispute: u64, deadline: u32) -> Result<()> {
+        instructions::start_contract_on_buyer::start_contract_on_buyer(ctx, contract_id, amount, dispute, deadline)
     }
 
     /* 
-        Buyer will accept the contract after buyer creates a new contract.
+        Seller will start by calling this function wiht just dispute fee.
+    */
+    
+    pub fn start_contract_on_seller(ctx: Context<StartContractOnSellerContext>, contract_id: String, amount: u64, dispute: u64, deadline: u32) -> Result<()> {
+        instructions::start_contract_on_seller::start_contract_on_seller(ctx, contract_id, amount, dispute, deadline)
+    }
+
+    /* 
+        Buyer will accept the contract after seller creates a new contract.
         by calling this function with payment amount and dispute fee. 
     */
-    pub fn accept_contract(ctx: Context<AcceptContractContext>, contract_id: String,) -> Result<()> {
-        instructions::accept_contract::accept_contract(ctx, contract_id)
+    pub fn accept_contract_on_buyer(ctx: Context<AcceptContractOnBuyerContext>, contract_id: String,) -> Result<()> {
+        instructions::accept_contract_on_buyer::accept_contract_on_buyer(ctx, contract_id)
     }
 
     /* 
