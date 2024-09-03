@@ -47,6 +47,11 @@ pub fn start_contract_on_buyer(
     contract.deadline = deadline;
     contract.status = ContractStatus::Created;
 
+    if let Some(buyer_referral) = &ctx.accounts.buyer_referral {
+        msg!("buyer_referral provided: {}", buyer_referral.key());
+        contract.buyer_referral = buyer_referral.key();
+    }
+
     // Transfer paytoken(amount + dispute) to the contract account
     token::transfer(
         CpiContext::new(
