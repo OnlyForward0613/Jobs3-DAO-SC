@@ -10,6 +10,8 @@ use crate::errors::{
 pub struct Contract {
     pub buyer: Pubkey,
     pub seller: Pubkey,
+    pub buyer_referral: Pubkey,
+    pub seller_referral: Pubkey,
     pub contract_id: String, 
     pub start_time: u32,
     pub deadline: u32,
@@ -34,6 +36,8 @@ impl Default for Contract {
             contract_id: "".to_string(),
             buyer: Pubkey::default(),
             seller: Pubkey::default(),
+            buyer_referral: Pubkey::default(),
+            seller_referral: Pubkey::default(),
             start_time: 0,
             deadline: 0,
             amount: 0,

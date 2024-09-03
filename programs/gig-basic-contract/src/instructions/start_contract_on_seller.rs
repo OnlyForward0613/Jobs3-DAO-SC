@@ -47,6 +47,11 @@ pub fn start_contract_on_seller(
     contract.deadline = deadline;
     contract.status = ContractStatus::Created;
 
+    if let Some(seller_referral) = &ctx.accounts.seller_referral {
+        msg!("seller_referral provided: {}", seller_referral.key());
+        contract.seller_referral = seller_referral.key();
+    }
+
     // Transfer paytoken(dispute) to the contract account
     token::transfer(
         CpiContext::new(
@@ -83,6 +88,9 @@ pub struct StartContractOnSellerContext<'info> {
     pub contract: Account<'info, Contract>,
 
     pub buyer: SystemAccount<'info>,
+
+    // Referral is optional
+    pub seller_referral:  Option<SystemAccount<'info>>,
 
     pub pay_token_mint: Account<'info, Mint>,
     

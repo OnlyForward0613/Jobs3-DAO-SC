@@ -78,18 +78,58 @@ pub fn seller_approve(
                 ((total_balance - 2 * contract.dispute) * 45 / 100 + contract.dispute).try_into().unwrap(),
                 )?;
 
+                let mut admin_amount: u64 = ((total_balance - 2 * contract.dispute ) * 10 / 100).try_into().unwrap();
+
+                // To buyer referral
+                if let Some(buyer_referral_ata) = &ctx.accounts.buyer_referral_ata {
+                    let buyer_referral_amount: u64 = ((total_balance - 2 * contract.dispute ) * 1 / 100).try_into().unwrap();
+                    admin_amount -= buyer_referral_amount;
+    
+                    token::transfer(
+                        CpiContext::new_with_signer(
+                            token_program.to_account_info(),
+                            SplTransfer {
+                                from: source.to_account_info().clone(),
+                                to: buyer_referral_ata.to_account_info().clone(),
+                                authority: contract.to_account_info().clone(),
+                            },
+                            &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
+                        ),
+                        buyer_referral_amount,
+                    )?;
+                } 
+    
+                // To seller referral
+                if let Some(seller_referral_ata) = &ctx.accounts.seller_referral_ata {
+                    let seller_referral_amount: u64 = ((total_balance - 2 * contract.dispute ) * 1 / 100).try_into().unwrap();
+                    admin_amount -= seller_referral_amount;
+    
+                    token::transfer(
+                        CpiContext::new_with_signer(
+                            token_program.to_account_info(),
+                            SplTransfer {
+                                from: source.to_account_info().clone(),
+                                to: seller_referral_ata.to_account_info().clone(),
+                                authority: contract.to_account_info().clone(),
+                            },
+                            &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
+                        ),
+                        seller_referral_amount,
+                    )?;
+                } 
+    
                 // To admin
                 token::transfer(
-                CpiContext::new_with_signer(
-                    token_program.to_account_info(),
-                    SplTransfer {
-                        from: source.to_account_info().clone(),
-                        to: admin_destination.to_account_info().clone(),
-                        authority: contract.to_account_info().clone(),
-                    },
-                    &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
-                ),
-                ((total_balance - 2 * contract.dispute ) * 10 / 100).try_into().unwrap(),
+                    CpiContext::new_with_signer(
+                        token_program.to_account_info(),
+                        SplTransfer {
+                            from: source.to_account_info().clone(),
+                            to: admin_destination.to_account_info().clone(),
+                            authority: contract.to_account_info().clone(),
+                        },
+                        &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
+                    ),
+                    admin_amount,
                 )?;
             } else {
                 // Raise dispute if seller is not satisfied with split decision
@@ -127,18 +167,58 @@ pub fn seller_approve(
             contract.dispute,
             )?;
 
+            let mut admin_amount: u64 = ((total_balance - 2 * contract.dispute ) * 10 / 100).try_into().unwrap();
+
+            // To buyer referral
+            if let Some(buyer_referral_ata) = &ctx.accounts.buyer_referral_ata {
+                let buyer_referral_amount: u64 = ((total_balance - 2 * contract.dispute ) * 1 / 100).try_into().unwrap();
+                admin_amount -= buyer_referral_amount;
+
+                token::transfer(
+                    CpiContext::new_with_signer(
+                        token_program.to_account_info(),
+                        SplTransfer {
+                            from: source.to_account_info().clone(),
+                            to: buyer_referral_ata.to_account_info().clone(),
+                            authority: contract.to_account_info().clone(),
+                        },
+                        &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
+                    ),
+                    buyer_referral_amount,
+                )?;
+            } 
+
+            // To seller referral
+            if let Some(seller_referral_ata) = &ctx.accounts.seller_referral_ata {
+                let seller_referral_amount: u64 = ((total_balance - 2 * contract.dispute ) * 1 / 100).try_into().unwrap();
+                admin_amount -= seller_referral_amount;
+
+                token::transfer(
+                    CpiContext::new_with_signer(
+                        token_program.to_account_info(),
+                        SplTransfer {
+                            from: source.to_account_info().clone(),
+                            to: seller_referral_ata.to_account_info().clone(),
+                            authority: contract.to_account_info().clone(),
+                        },
+                        &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
+                    ),
+                    seller_referral_amount,
+                )?;
+            } 
+
             // To admin
             token::transfer(
-            CpiContext::new_with_signer(
-                token_program.to_account_info(),
-                SplTransfer {
-                    from: source.to_account_info().clone(),
-                    to: admin_destination.to_account_info().clone(),
-                    authority: contract.to_account_info().clone(),
-                },
-                &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
-            ),
-            ((total_balance - 2 * contract.dispute ) * 10 / 100).try_into().unwrap(),
+                CpiContext::new_with_signer(
+                    token_program.to_account_info(),
+                    SplTransfer {
+                        from: source.to_account_info().clone(),
+                        to: admin_destination.to_account_info().clone(),
+                        authority: contract.to_account_info().clone(),
+                    },
+                    &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
+                ),
+                admin_amount,
             )?;
         }
     }
@@ -170,12 +250,28 @@ pub struct SellerApproveContext<'info> {
     )]
     pub seller_ata: Account<'info, TokenAccount>,
 
+    // Optional
+    #[account(
+        mut, 
+        associated_token::mint = PAY_TOKEN_MINT_ADDRESS,
+        associated_token::authority = contract.seller_referral,
+    )]
+    pub seller_referral_ata: Option<Account<'info, TokenAccount>>,
+
     #[account(
         mut, 
         associated_token::mint = PAY_TOKEN_MINT_ADDRESS,
         associated_token::authority = contract.buyer,
     )]
     pub buyer_ata: Account<'info, TokenAccount>,
+
+    // Optional
+    #[account(
+        mut, 
+        associated_token::mint = PAY_TOKEN_MINT_ADDRESS,
+        associated_token::authority = contract.buyer_referral,
+    )]
+    pub buyer_referral_ata: Option<Account<'info, TokenAccount>>,
 
     #[account(
         mut, 

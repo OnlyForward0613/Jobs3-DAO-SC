@@ -84,6 +84,9 @@ pub struct StartContractOnBuyerContext<'info> {
 
     pub seller: SystemAccount<'info>,
 
+    // Referral is optional
+    pub buyer_referral:  Option<SystemAccount<'info>>,
+
     pub pay_token_mint: Account<'info, Mint>,
     
     #[account(
