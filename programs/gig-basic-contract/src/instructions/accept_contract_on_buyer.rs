@@ -32,6 +32,11 @@ pub fn accept_contract_on_buyer(
 
     contract.status = ContractStatus::Accepted;
 
+    if let Some(buyer_referral) = &ctx.accounts.buyer_referral {
+        msg!("buyer_referral provided: {}", buyer_referral.key());
+        contract.buyer_referral = buyer_referral.key();
+    }
+
     // Transfer paytoken(amount + dispute) to the contract account
     token::transfer(
     CpiContext::new(
@@ -72,6 +77,8 @@ pub struct AcceptContractOnBuyerContext<'info> {
     )]
     pub buyer_ata: Account<'info, TokenAccount>,
 
+    // Referral is optional
+    pub buyer_referral:  Option<SystemAccount<'info>>,
 
     #[account(
         mut, 

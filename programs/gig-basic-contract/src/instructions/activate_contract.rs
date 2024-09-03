@@ -33,6 +33,11 @@ pub fn activate_contract(
 
     contract.status = ContractStatus::Active;
 
+    if let Some(seller_referral) = &ctx.accounts.seller_referral {
+        msg!("seller_referral provided: {}", seller_referral.key());
+        contract.seller_referral = seller_referral.key();
+    }
+
     if with_dispute ==  true {
          // Transfer paytoken(dispute) to the contract account
         token::transfer(
@@ -75,6 +80,8 @@ pub struct ActivateContractContext<'info> {
     )]
     pub seller_ata: Account<'info, TokenAccount>,
 
+    // Referral is optional
+    pub seller_referral:  Option<SystemAccount<'info>>,
 
     #[account(
         mut, 
