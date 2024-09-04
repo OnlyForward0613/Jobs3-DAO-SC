@@ -60,16 +60,27 @@ describe("gig-basic-contract", () => {
 
   // let contractAddress: any;
   let contractAddress = new PublicKey(
-    "3Jnz8FLLX1oFzSQnUV5vAvs8HKa2L7XSqVVPfZtQbhzj"
+    "81pZNqS4m7uHS7mQiH88PbBDjebeJqJZfDtCjFHPE5g1"
   );
   // let contractBump: any;
-  let contractBump = 254;
+  let contractBump = 251;
 
   let authAta: any;
   let firstAta: any;
   let secondAta: any;
   let contractAta: any;
-  let contractId: any;
+  let contractId: any = "cbb71b01";
+
+  let buyerReferral = new PublicKey(
+    "At1PNJxjhr9NrThvDGCkNA17Q57ceWZqXe6pdbYb15T5"
+  );
+
+  let sellerReferral = new PublicKey(
+    "E2kkuEFZktytswKCYYsXyKx483vfM2qqj1zPQDer4djg"
+  );
+
+  let buyerReferralAta: any;
+  let sellerReferralAta: any;
 
   it("[Success] Fetch all contracts!", async () => {
     try {
@@ -132,6 +143,20 @@ describe("gig-basic-contract", () => {
         secondKp,
         payTokenMint,
         secondKp.publicKey
+      );
+
+      buyerReferralAta = await getOrCreateAssociatedTokenAccount(
+        program.provider.connection,
+        authKp,
+        payTokenMint,
+        buyerReferral
+      );
+
+      sellerReferralAta = await getOrCreateAssociatedTokenAccount(
+        program.provider.connection,
+        authKp,
+        payTokenMint,
+        sellerReferral
       );
 
       // await transfer(
@@ -241,8 +266,8 @@ describe("gig-basic-contract", () => {
   //     assert.equal(error.error.errorMessage, "Dispute Amount should be 50 cent!");
   //   }
   // });
-
-  // it("1-[Success] Create a new contract!", async () => {
+  ///===========================//
+  // it("1-[Success] Create a new contract on buyer side!", async () => {
   //   try {
   //     // Create a new uuid to use as a new contract id
   //     contractId = uuid().slice(0, 8);
@@ -276,18 +301,19 @@ describe("gig-basic-contract", () => {
 
   //     // Call startContract function
   //     const tx = await program.methods
-  //       .startContract(
+  //       .startContractOnBuyer(
   //         contractId,
   //         amount, 
   //         dispute, 
   //         deadline,
-          
   //       )
   //       .accounts({
   //         buyer: firstKp.publicKey,
   //         contract,
   //         seller: secondKp.publicKey,
+  //         buyerReferral,
   //         buyerAta: firstAta.address,
+  //         payTokenMint,
   //         contractAta: contractAta.address,
   //         tokenProgram: TOKEN_PROGRAM_ID,
   //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -312,6 +338,7 @@ describe("gig-basic-contract", () => {
   //   }
   // });
 
+  ///===========================//
   // it("1-[Success] Activate the contract!", async () => {
   //   try {
   //     let contractAccount = await program.account.contract.fetch(contractAddress);
@@ -319,11 +346,12 @@ describe("gig-basic-contract", () => {
 
   //     // Call the buy_tickets function
   //     const tx = await program.methods
-  //       .activateContract(contractId)
+  //       .activateContract(contractId, true)
   //       .accounts({
   //         contract: contractAddress,
   //         seller: secondKp.publicKey,
   //         sellerAta: secondAta.address,
+  //         sellerReferral: null,
   //         contractAta: contractAta.address,
   //         tokenProgram: TOKEN_PROGRAM_ID,
   //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -376,6 +404,7 @@ describe("gig-basic-contract", () => {
   //   }
   // });
 
+  ///===========================//
   // it("1-[Success-Satisfied(no split)] Approve by buyer(client)!", async () => {
   //   try {
   //     let contractAccount = await program.account.contract.fetch(contractAddress);
@@ -441,36 +470,39 @@ describe("gig-basic-contract", () => {
   //   }
   // });
 
-  // it("1-[Success-No split] Approve by seller(freelancer)!", async () => {
-  //   try {
-  //     let contractAccount = await program.account.contract.fetch(contractAddress);
-  //     console.log("new contract before approving on seller!:", contractAccount);
+  ///===========================//
+  it("1-[Success-No split] Approve by seller(freelancer)!", async () => {
+    try {
+      let contractAccount = await program.account.contract.fetch(contractAddress);
+      console.log("new contract before approving on seller!:", contractAccount);
 
-  //     const tx = await program.methods
-  //       .sellerApprove(contractId, false)
-  //       .accounts({
-  //         contract: contractAddress,
-  //         seller: secondKp.publicKey,
-  //         sellerAta: secondAta.address,
-  //         buyerAta: firstAta.address,
-  //         adminAta: authAta.address,
-  //         contractAta: contractAta.address,
-  //         tokenProgram: TOKEN_PROGRAM_ID,
-  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-  //         systemProgram: anchor.web3.SystemProgram.programId,
-  //       })
-  //       .signers([secondKp])
-  //       .rpc();
+      const tx = await program.methods
+        .sellerApprove(contractId, false)
+        .accounts({
+          contract: contractAddress,
+          seller: secondKp.publicKey,
+          sellerAta: secondAta.address,
+          buyerAta: firstAta.address,
+          adminAta: authAta.address,
+          contractAta: contractAta.address,
+          buyerReferralAta: buyerReferralAta.address,
+          sellerReferralAta: null, // sellerReferralAta.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([secondKp])
+        .rpc();
 
-  //     console.log("Your transaction signature for approving on seller:", tx);
+      console.log("Your transaction signature for approving on seller:", tx);
    
-  //     contractAccount = await program.account.contract.fetch(contractAddress);
+      contractAccount = await program.account.contract.fetch(contractAddress);
 
-  //     console.log("new contract after approving on seller!:", contractAccount);
-  //   } catch (error) {
-  //     console.log("Error while approving on seller!:", error);
-  //   }
-  // });
+      console.log("new contract after approving on seller!:", contractAccount);
+    } catch (error) {
+      console.log("Error while approving on seller!:", error);
+    }
+  });
 
   // it("1-[Failure] Approve by admin!", async () => {
   //   try {
@@ -640,137 +672,137 @@ describe("gig-basic-contract", () => {
   //   }
   // });
 
-  // Testing dispute cases
-  it("3-[Success] Create a new contract!", async () => {
-    try {
-      // Create a new uuid to use as a new contract id
-      contractId = uuid().slice(0, 8);
-      console.log("new contractId:", contractId);
+  // // Testing dispute cases
+  // it("3-[Success] Create a new contract!", async () => {
+  //   try {
+  //     // Create a new uuid to use as a new contract id
+  //     contractId = uuid().slice(0, 8);
+  //     console.log("new contractId:", contractId);
 
-      const amount = new anchor.BN(10 * Math.pow(10, decimal)); // 10 BPT token; // 10 USDC
-      const dispute = new anchor.BN(0.5 * Math.pow(10, decimal)); // 0.5 BPT token; // 0.5 USDC 50 cent
-      const deadline = Math.floor(Date.now() / 1000) + (10 * 24 * 60 * 60); // 10 days in seconds from Current timestamp
+  //     const amount = new anchor.BN(10 * Math.pow(10, decimal)); // 10 BPT token; // 10 USDC
+  //     const dispute = new anchor.BN(0.5 * Math.pow(10, decimal)); // 0.5 BPT token; // 0.5 USDC 50 cent
+  //     const deadline = Math.floor(Date.now() / 1000) + (10 * 24 * 60 * 60); // 10 days in seconds from Current timestamp
 
-      const [contract, bump] = anchor.web3.PublicKey.findProgramAddressSync(
-        [
-          Buffer.from(anchor.utils.bytes.utf8.encode(CONTRACT_SEED)),
-          Buffer.from(anchor.utils.bytes.utf8.encode(contractId)),
-        ],
-        program.programId
-      );
+  //     const [contract, bump] = anchor.web3.PublicKey.findProgramAddressSync(
+  //       [
+  //         Buffer.from(anchor.utils.bytes.utf8.encode(CONTRACT_SEED)),
+  //         Buffer.from(anchor.utils.bytes.utf8.encode(contractId)),
+  //       ],
+  //       program.programId
+  //     );
 
 
-      contractAddress = contract;
-      contractBump = bump;
-      console.log("contractAddress", contractAddress);
-      console.log("contractBump", contractBump);
+  //     contractAddress = contract;
+  //     contractBump = bump;
+  //     console.log("contractAddress", contractAddress);
+  //     console.log("contractBump", contractBump);
 
-      contractAta = await getOrCreateAssociatedTokenAccount(
-        program.provider.connection,
-        authKp,
-        payTokenMint,
-        contractAddress,
-        true
-      );
+  //     contractAta = await getOrCreateAssociatedTokenAccount(
+  //       program.provider.connection,
+  //       authKp,
+  //       payTokenMint,
+  //       contractAddress,
+  //       true
+  //     );
 
-      // Call startContract function
-      const tx = await program.methods
-        .startContract(
-          contractId,
-          amount, 
-          dispute, 
-          deadline,
+  //     // Call startContract function
+  //     const tx = await program.methods
+  //       .startContract(
+  //         contractId,
+  //         amount, 
+  //         dispute, 
+  //         deadline,
           
-        )
-        .accounts({
-          buyer: firstKp.publicKey,
-          contract,
-          seller: secondKp.publicKey,
-          buyerAta: firstAta.address,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-          rent: SYSVAR_RENT_PUBKEY,
-        })
+  //       )
+  //       .accounts({
+  //         buyer: firstKp.publicKey,
+  //         contract,
+  //         seller: secondKp.publicKey,
+  //         buyerAta: firstAta.address,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //         rent: SYSVAR_RENT_PUBKEY,
+  //       })
 
-        .signers([firstKp])
-        .rpc();
-        // .rpc({ skipPreflight: true });
+  //       .signers([firstKp])
+  //       .rpc();
+  //       // .rpc({ skipPreflight: true });
 
 
-      console.log("Your transaction signature for creating a new contract", tx);
+  //     console.log("Your transaction signature for creating a new contract", tx);
 
-      // Fetch the contract account and assert the values
-      const contractAccount = await program.account.contract.fetch(contract);
+  //     // Fetch the contract account and assert the values
+  //     const contractAccount = await program.account.contract.fetch(contract);
 
-      console.log("new contract account:", contractAccount);
+  //     console.log("new contract account:", contractAccount);
 
-    } catch (error) {
-      console.log("Error while creating a new contract:", error);
-    }
-  });
+  //   } catch (error) {
+  //     console.log("Error while creating a new contract:", error);
+  //   }
+  // });
 
-  it("3-[Success] Activate the contract!", async () => {
-    try {
-      let contractAccount = await program.account.contract.fetch(contractAddress);
-      console.log("new contract before activating:", contractAccount);
+  // it("3-[Success] Activate the contract!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.contract.fetch(contractAddress);
+  //     console.log("new contract before activating:", contractAccount);
 
-      // Call the buy_tickets function
-      const tx = await program.methods
-        .activateContract(contractId)
-        .accounts({
-          contract: contractAddress,
-          seller: secondKp.publicKey,
-          sellerAta: secondAta.address,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([secondKp])
-        .rpc({ skipPreflight: true });
+  //     // Call the buy_tickets function
+  //     const tx = await program.methods
+  //       .activateContract(contractId)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         seller: secondKp.publicKey,
+  //         sellerAta: secondAta.address,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([secondKp])
+  //       .rpc({ skipPreflight: true });
 
-      console.log("Your transaction signature for activating the contract:", tx);
+  //     console.log("Your transaction signature for activating the contract:", tx);
    
-      contractAccount = await program.account.contract.fetch(contractAddress);
+  //     contractAccount = await program.account.contract.fetch(contractAddress);
 
-      console.log("new contract after activating:", contractAccount);
-    } catch (error) {
-      console.log("Error while activating contract!:", error);
-    }
-  });
+  //     console.log("new contract after activating:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while activating contract!:", error);
+  //   }
+  // });
 
-  it("3-[Success-Dissatisfied(split)] Approve by buyer(client)!", async () => {
-    try {
-      let contractAccount = await program.account.contract.fetch(contractAddress);
-      console.log("new contract before approving on buyer!:", contractAccount);
+  // it("3-[Success-Dissatisfied(split)] Approve by buyer(client)!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.contract.fetch(contractAddress);
+  //     console.log("new contract before approving on buyer!:", contractAccount);
 
-      const tx = await program.methods
-        .buyerApprove(contractId, true)
-        .accounts({
-          contract: contractAddress,
-          buyer: firstKp.publicKey,
-          sellerAta: secondAta.address,
-          buyerAta: firstAta.address,
-          adminAta: authAta.address,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([firstKp])
-        .rpc({ skipPreflight: true });
+  //     const tx = await program.methods
+  //       .buyerApprove(contractId, true)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         buyer: firstKp.publicKey,
+  //         sellerAta: secondAta.address,
+  //         buyerAta: firstAta.address,
+  //         adminAta: authAta.address,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([firstKp])
+  //       .rpc({ skipPreflight: true });
 
-      console.log("Your transaction signature for approving on buyer:", tx);
+  //     console.log("Your transaction signature for approving on buyer:", tx);
    
-      contractAccount = await program.account.contract.fetch(contractAddress);
+  //     contractAccount = await program.account.contract.fetch(contractAddress);
 
-      console.log("new contract after approving on buyer!:", contractAccount);
-    } catch (error) {
-      console.log("Error while approving on buyer!:", error);
-    }
-  });
+  //     console.log("new contract after approving on buyer!:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while approving on buyer!:", error);
+  //   }
+  // });
 
   // // 1 - Agree with split
   // it("3-[Success-Agree with split] Approve by seller(freelancer)!", async () => {
@@ -805,36 +837,36 @@ describe("gig-basic-contract", () => {
   // });
 
   //## - Disagree with split so dispute
-  it("3-[Success-Disagree with split] Approve by seller(freelancer)!", async () => {
-    try {
-      let contractAccount = await program.account.contract.fetch(contractAddress);
-      console.log("new contract before approving on seller!:", contractAccount);
+  // it("3-[Success-Disagree with split] Approve by seller(freelancer)!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.contract.fetch(contractAddress);
+  //     console.log("new contract before approving on seller!:", contractAccount);
 
-      const tx = await program.methods
-        .sellerApprove(contractId, false)
-        .accounts({
-          contract: contractAddress,
-          seller: secondKp.publicKey,
-          sellerAta: secondAta.address,
-          buyerAta: firstAta.address,
-          adminAta: authAta.address,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([secondKp])
-        .rpc();
+  //     const tx = await program.methods
+  //       .sellerApprove(contractId, false)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         seller: secondKp.publicKey,
+  //         sellerAta: secondAta.address,
+  //         buyerAta: firstAta.address,
+  //         adminAta: authAta.address,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([secondKp])
+  //       .rpc();
 
-      console.log("Your transaction signature for approving on seller:", tx);
+  //     console.log("Your transaction signature for approving on seller:", tx);
    
-      contractAccount = await program.account.contract.fetch(contractAddress);
+  //     contractAccount = await program.account.contract.fetch(contractAddress);
 
-      console.log("new contract after approving on seller!:", contractAccount);
-    } catch (error) {
-      console.log("Error while approving on seller!:", error);
-    }
-  });
+  //     console.log("new contract after approving on seller!:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while approving on seller!:", error);
+  //   }
+  // });
   // //## Invalid admin test
   // it("3-[Failure-invalid admin] Approve by admin!", async () => {
   //   try {
@@ -934,36 +966,36 @@ describe("gig-basic-contract", () => {
   // });
 
   //## 3.Agree with split
-  it("3-[Success - Dispute-Agree with split] Approve by admin!", async () => {
-    try {
-      let contractAccount = await program.account.contract.fetch(contractAddress);
-      console.log("new contract before approving on admin!:", contractAccount);
+  // it("3-[Success - Dispute-Agree with split] Approve by admin!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.contract.fetch(contractAddress);
+  //     console.log("new contract before approving on admin!:", contractAccount);
 
-      const tx = await program.methods
-        .adminApprove(contractId, 3)
-        .accounts({
-          contract: contractAddress,
-          admin: authKp.publicKey,
-          sellerAta: secondAta.address,
-          buyerAta: firstAta.address,
-          adminAta: authAta.address,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([authKp])
-        .rpc();
+  //     const tx = await program.methods
+  //       .adminApprove(contractId, 3)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         admin: authKp.publicKey,
+  //         sellerAta: secondAta.address,
+  //         buyerAta: firstAta.address,
+  //         adminAta: authAta.address,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([authKp])
+  //       .rpc();
 
-      console.log("Your transaction signature for approving on admin:", tx);
+  //     console.log("Your transaction signature for approving on admin:", tx);
    
-      contractAccount = await program.account.contract.fetch(contractAddress);
+  //     contractAccount = await program.account.contract.fetch(contractAddress);
 
-      console.log("new contract after approving on admin!:", contractAccount);
-    } catch (error) {
-      console.log("Error while approving on admin!:", error);
-    }
-  });
+  //     console.log("new contract after approving on admin!:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while approving on admin!:", error);
+  //   }
+  // });
 
 
   // it("4-[Success] Create a new contract on Seller!", async () => {

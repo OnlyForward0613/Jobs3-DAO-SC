@@ -6,7 +6,7 @@ skip-lint = false
 gig_basic_contract = "FjPwNzWH81Gc69RruKgCeu6DZwSdSfDrXdjG84JyNS5e"
 
 [programs.devnet]
-gig_basic_contract = "D6a3MwZXtduiRS56F5XGXfSGKkCXxLSbLy7FTVtN4T74"
+gig_basic_contract = "H3guJtULf9tvMs9KXmbsQJ4XMrKK6DYzDwmc88Vi6N6J"
 
 [programs.mainnet]
 gig_basic_contract = "GuqgMVMCLi9daQMHyhnLRGTpgpwNGU4yZXs9GK4SYrbS"
