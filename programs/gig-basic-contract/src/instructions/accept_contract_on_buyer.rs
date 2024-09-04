@@ -25,6 +25,9 @@ pub fn accept_contract_on_buyer(
     // Check if the signer is a correct buyer
     require_keys_eq!(ctx.accounts.buyer.key(), contract.buyer, GigContractError::InvalidAcceptor);
 
+    // Check if the contract is created.
+    require!(contract.status == ContractStatus::Created, GigContractError::CantAccept);
+
     let token_program = &ctx.accounts.token_program;
     let authority = &ctx.accounts.buyer;
     let source = &ctx.accounts.buyer_ata;
