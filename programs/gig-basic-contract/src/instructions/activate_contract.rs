@@ -26,6 +26,9 @@ pub fn activate_contract(
     // Check if the signer is a correct seller
     require_keys_eq!(ctx.accounts.seller.key(), contract.seller, GigContractError::InvalidActivator);
 
+    // Check if the contract is Created or Accepted.
+    require!(contract.status == ContractStatus::Created || contract.status == ContractStatus::Accepted, GigContractError::CantActivate);
+
     let token_program = &ctx.accounts.token_program;
     let authority = &ctx.accounts.seller;
     let source = &ctx.accounts.seller_ata;

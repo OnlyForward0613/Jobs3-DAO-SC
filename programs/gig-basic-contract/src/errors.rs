@@ -18,6 +18,8 @@ pub enum GigContractError {
     CantRelease,
     #[msg("Contract status should be Created to accept!")]
     CantAccept,
+    #[msg("Can not activate contract!")]
+    CantActivate,
     #[msg("Contract is not pending or disputed yet so admin can't approve now or already completed!")]
     NotReadyYet,
     #[msg("Invalid payment token!")]
