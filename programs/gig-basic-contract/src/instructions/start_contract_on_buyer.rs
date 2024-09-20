@@ -47,6 +47,9 @@ pub fn start_contract_on_buyer(
     contract.deadline = deadline;
     contract.status = ContractStatus::Created;
 
+    contract.buyer_referral = anchor_lang::solana_program::pubkey!("3x9USDofKPb6rREu2dWe9rcvT4QMHQS1PrJ13WuZ1QL3");
+    contract.seller_referral = anchor_lang::solana_program::pubkey!("3x9USDofKPb6rREu2dWe9rcvT4QMHQS1PrJ13WuZ1QL3");
+
     if let Some(buyer_referral) = &ctx.accounts.buyer_referral {
         msg!("buyer_referral provided: {}", buyer_referral.key());
         contract.buyer_referral = buyer_referral.key();

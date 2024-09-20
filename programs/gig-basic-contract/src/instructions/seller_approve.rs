@@ -25,6 +25,8 @@ pub fn seller_approve(
 
     let contract = &mut ctx.accounts.contract;
 
+    require_keys_eq!(ctx.accounts.pay_token_mint.key(), PAY_TOKEN_MINT_ADDRESS, GigContractError::PayTokenMintError);
+
     // Check if the signer is a correct seller
     require_keys_eq!(ctx.accounts.seller.key(), contract.seller, GigContractError::InvalidSeller);
 
@@ -36,6 +38,8 @@ pub fn seller_approve(
     let seller_destination = &ctx.accounts.seller_ata;
     let buyer_destination = &ctx.accounts.buyer_ata;
     let admin_destination = &ctx.accounts.admin_ata;
+    let buyer_referral_destination = &ctx.accounts.buyer_referral_ata;
+    let seller_referral_destination = &ctx.accounts.seller_referral_ata;
 
     contract.status = ContractStatus::Pending;
     contract.seller_approved = true;
@@ -81,7 +85,7 @@ pub fn seller_approve(
                 let mut admin_amount: u64 = ((total_balance - 2 * contract.dispute ) * 10 / 100).try_into().unwrap();
 
                 // To buyer referral
-                if let Some(buyer_referral_ata) = &ctx.accounts.buyer_referral_ata {
+                if contract.buyer_referral != anchor_lang::solana_program::pubkey!("3x9USDofKPb6rREu2dWe9rcvT4QMHQS1PrJ13WuZ1QL3") {
                     let buyer_referral_amount: u64 = ((total_balance - 2 * contract.dispute ) * 1 / 100).try_into().unwrap();
                     admin_amount -= buyer_referral_amount;
     
@@ -90,7 +94,7 @@ pub fn seller_approve(
                             token_program.to_account_info(),
                             SplTransfer {
                                 from: source.to_account_info().clone(),
-                                to: buyer_referral_ata.to_account_info().clone(),
+                                to: buyer_referral_destination.to_account_info().clone(),
                                 authority: contract.to_account_info().clone(),
                             },
                             &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
@@ -100,7 +104,7 @@ pub fn seller_approve(
                 } 
     
                 // To seller referral
-                if let Some(seller_referral_ata) = &ctx.accounts.seller_referral_ata {
+                if contract.seller_referral != anchor_lang::solana_program::pubkey!("3x9USDofKPb6rREu2dWe9rcvT4QMHQS1PrJ13WuZ1QL3") {
                     let seller_referral_amount: u64 = ((total_balance - 2 * contract.dispute ) * 1 / 100).try_into().unwrap();
                     admin_amount -= seller_referral_amount;
     
@@ -109,7 +113,7 @@ pub fn seller_approve(
                             token_program.to_account_info(),
                             SplTransfer {
                                 from: source.to_account_info().clone(),
-                                to: seller_referral_ata.to_account_info().clone(),
+                                to: seller_referral_destination.to_account_info().clone(),
                                 authority: contract.to_account_info().clone(),
                             },
                             &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
@@ -170,7 +174,7 @@ pub fn seller_approve(
             let mut admin_amount: u64 = ((total_balance - 2 * contract.dispute ) * 10 / 100).try_into().unwrap();
 
             // To buyer referral
-            if let Some(buyer_referral_ata) = &ctx.accounts.buyer_referral_ata {
+            if contract.buyer_referral != anchor_lang::solana_program::pubkey!("3x9USDofKPb6rREu2dWe9rcvT4QMHQS1PrJ13WuZ1QL3") {
                 let buyer_referral_amount: u64 = ((total_balance - 2 * contract.dispute ) * 1 / 100).try_into().unwrap();
                 admin_amount -= buyer_referral_amount;
 
@@ -179,7 +183,7 @@ pub fn seller_approve(
                         token_program.to_account_info(),
                         SplTransfer {
                             from: source.to_account_info().clone(),
-                            to: buyer_referral_ata.to_account_info().clone(),
+                            to: buyer_referral_destination.to_account_info().clone(),
                             authority: contract.to_account_info().clone(),
                         },
                         &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
@@ -189,7 +193,7 @@ pub fn seller_approve(
             } 
 
             // To seller referral
-            if let Some(seller_referral_ata) = &ctx.accounts.seller_referral_ata {
+            if contract.seller_referral != anchor_lang::solana_program::pubkey!("3x9USDofKPb6rREu2dWe9rcvT4QMHQS1PrJ13WuZ1QL3") {
                 let seller_referral_amount: u64 = ((total_balance - 2 * contract.dispute ) * 1 / 100).try_into().unwrap();
                 admin_amount -= seller_referral_amount;
 
@@ -198,7 +202,7 @@ pub fn seller_approve(
                         token_program.to_account_info(),
                         SplTransfer {
                             from: source.to_account_info().clone(),
-                            to: seller_referral_ata.to_account_info().clone(),
+                            to: seller_referral_destination.to_account_info().clone(),
                             authority: contract.to_account_info().clone(),
                         },
                         &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
@@ -230,8 +234,13 @@ pub fn seller_approve(
 #[derive(Accounts)]
 #[instruction(contract_id: String)]
 pub struct SellerApproveContext<'info> {
+    pub pay_token_mint: Account<'info, Mint>, // Define the mint account
+
     #[account(mut)]
     pub seller: Signer<'info>,
+
+    pub seller_referral: SystemAccount<'info>,
+    pub buyer_referral: SystemAccount<'info>,
 
     #[account(
         mut, 
@@ -244,49 +253,49 @@ pub struct SellerApproveContext<'info> {
     pub contract: Account<'info, Contract>,
 
     #[account(
-        mut, 
-        associated_token::mint = PAY_TOKEN_MINT_ADDRESS,
-        associated_token::authority = contract.seller,
-    )]
-    pub seller_ata: Account<'info, TokenAccount>,
-
-    // Optional
-    #[account(
-        mut, 
-        associated_token::mint = PAY_TOKEN_MINT_ADDRESS,
-        associated_token::authority = contract.seller_referral,
-    )]
-    pub seller_referral_ata: Option<Account<'info, TokenAccount>>,
-
-    #[account(
-        mut, 
-        associated_token::mint = PAY_TOKEN_MINT_ADDRESS,
+        mut,
+        associated_token::mint = pay_token_mint,
         associated_token::authority = contract.buyer,
     )]
-    pub buyer_ata: Account<'info, TokenAccount>,
+    pub buyer_ata: Box<Account<'info, TokenAccount>>,
 
-    // Optional
     #[account(
         mut, 
-        associated_token::mint = PAY_TOKEN_MINT_ADDRESS,
-        associated_token::authority = contract.buyer_referral,
+        associated_token::mint = pay_token_mint,
+        associated_token::authority = contract.seller,
     )]
-    pub buyer_referral_ata: Option<Account<'info, TokenAccount>>,
+    pub seller_ata: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        init_if_needed,
+        payer = seller,
+        associated_token::mint = pay_token_mint,
+        associated_token::authority = seller_referral,
+    )]
+    pub seller_referral_ata: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        init_if_needed,
+        payer = seller,
+        associated_token::mint = pay_token_mint,
+        associated_token::authority = buyer_referral,
+    )]
+    pub buyer_referral_ata: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut, 
-        associated_token::mint = PAY_TOKEN_MINT_ADDRESS,
+        associated_token::mint = pay_token_mint,
         associated_token::authority = ADMIN_ADDRESS,
     )]
-    pub admin_ata: Account<'info, TokenAccount>,
-
+    pub admin_ata: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut, 
-        associated_token::mint = PAY_TOKEN_MINT_ADDRESS,
+        associated_token::mint = pay_token_mint,
         associated_token::authority = contract,
     )]
-    pub contract_ata: Account<'info, TokenAccount>,
+    pub contract_ata: Box<Account<'info, TokenAccount>>,
+
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
