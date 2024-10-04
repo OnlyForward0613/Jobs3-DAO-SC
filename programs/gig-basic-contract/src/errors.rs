@@ -23,5 +23,11 @@ pub enum GigContractError {
     #[msg("Contract is not pending or disputed yet so admin can't approve now or already completed!")]
     NotReadyYet,
     #[msg("Invalid payment token!")]
-    PayTokenMintError
+    PayTokenMintError,
+    #[msg("Invalid pay amount!")]
+    PayAmountError,
+    #[msg("Hourly Contract was paused!")]
+    HourlyContractPaused,
+    #[msg("Hourly Contract was ended!")]
+    HourlyContractEnded,
 }

@@ -73,4 +73,65 @@ pub mod gig_basic_contract {
     pub fn seller_approve(ctx: Context<SellerApproveContext>, contract_id: String, seller_satisfied: bool) -> Result<()> {
         instructions::seller_approve::seller_approve(ctx, contract_id, seller_satisfied)
     }
+
+
+    // Hourly gigs part //
+    /* 
+        Buyer will start a working hourly contract between buyer and seller 
+        by calling this function with hourly rate, weekly limit and dispute fee. 
+    */
+    
+    pub fn start_hourly_contract_on_buyer(ctx: Context<StartHourlyContractOnBuyerContext>, contract_id: String, hourly_rate: u32, weekly_hours_limit: u32, dispute: u64, deadline: u32) -> Result<()> {
+        instructions::start_hourly_contract_on_buyer::start_hourly_contract_on_buyer(ctx, contract_id, hourly_rate, weekly_hours_limit, dispute, deadline)
+    }
+
+    /* 
+        Seller will activate the contract after checking all conditions that buyer set 
+        when creating the contract.
+    */
+    pub fn activate_hourly_contract(ctx: Context<ActivateHourlyContractContext>, contract_id: String, with_dispute: bool) -> Result<()> {
+        instructions::activate_hourly_contract::activate_hourly_contract(ctx, contract_id, with_dispute)
+    }
+
+    /* 
+        Freelancer will update his worked hours per week
+    */
+    pub fn update_worked_hour(ctx: Context<UpdateWorkedHourContext>, contract_id: String, week_worked_hour: u32) -> Result<()> {
+        instructions::update_worked_hour::update_worked_hour(ctx, contract_id, week_worked_hour)
+    }
+
+    /* 
+        Client will pay worked hours of freelancers per week
+    */
+    pub fn pay_worked_hour(ctx: Context<PayWorkedHourContext>, contract_id: String, amount: u64) -> Result<()> {
+        instructions::pay_worked_hour::pay_worked_hour(ctx, contract_id, amount)
+    }
+
+    /* 
+        Freelancer will approve to get paid
+    */
+    pub fn seller_approve_hourly_contract(ctx: Context<SellerApproveHourlyContractContext>, contract_id: String, seller_satisfied: bool) -> Result<()> {
+        instructions::seller_approve_hourly_contract::seller_approve_hourly_contract(ctx, contract_id, seller_satisfied)
+    }
+
+    /* 
+        Client will end hourly contracts
+    */
+    pub fn end_hourly_contract(ctx: Context<EndHourlyContractContext>, contract_id: String) -> Result<()> {
+        instructions::end_hourly_contract::end_hourly_contract(ctx, contract_id)
+    }
+
+    /* 
+        Client will pause hourly contracts
+    */
+    pub fn pause_hourly_contract(ctx: Context<PauseHourlyContractContext>, contract_id: String) -> Result<()> {
+        instructions::pause_hourly_contract::pause_hourly_contract(ctx, contract_id)
+    }
+
+    /* 
+        Client will resume hourly contracts
+    */
+    pub fn resume_hourly_contract(ctx: Context<ResumeHourlyContractContext>, contract_id: String) -> Result<()> {
+        instructions::resume_hourly_contract::resume_hourly_contract(ctx, contract_id)
+    }
 }
