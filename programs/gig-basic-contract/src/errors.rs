@@ -30,4 +30,10 @@ pub enum GigContractError {
     HourlyContractPaused,
     #[msg("Hourly Contract was ended!")]
     HourlyContractEnded,
+    #[msg("Exceeded weekly hours limit!")]
+    WeeklyHoursLimitError,
+    #[msg("It needs to be ready to pay!")]
+    HourlyGigPayError,
+    #[msg("Hourly Contract was not paid yet!")]
+    HourlyContractNotPaidYet,
 }

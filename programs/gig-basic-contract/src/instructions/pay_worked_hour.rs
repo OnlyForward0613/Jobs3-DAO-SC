@@ -31,12 +31,12 @@ pub fn pay_worked_hour(
     // Check if the signer is a correct seller
     require_keys_eq!(ctx.accounts.buyer.key(), contract.buyer, GigContractError::InvalidActivator);
 
-    // Check if the contract is Created or Accepted.
-    require!(contract.status == HourlyContractStatus::Created || contract.status == HourlyContractStatus::Accepted, GigContractError::CantActivate);
+    // Check if the contract is ReadyToPay.
+    require!(contract.status == HourlyContractStatus::ReadyToPay, GigContractError::HourlyGigPayError);
 
     require!(amount == (contract.week_worked_hour as f64 * f64::powi(10.0, 6)).round() as u64 , GigContractError::PayAmountError);
 
-    contract.status = HourlyContractStatus::Active;
+    contract.status = HourlyContractStatus::Paid;
     contract.total_worked_hour += contract.week_worked_hour;
     contract.week_worked_hour = 0;
 

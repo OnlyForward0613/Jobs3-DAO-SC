@@ -68,6 +68,8 @@ pub enum HourlyContractStatus {
     Created,
     Active,
     Accepted,
+    ReadyToPay,
+    Paid,
     Pending,
     Dispute,
     Completed,

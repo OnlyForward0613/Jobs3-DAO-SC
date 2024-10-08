@@ -30,8 +30,8 @@ pub fn seller_approve_hourly_contract (
     // Check if the signer is a correct seller
     require_keys_eq!(ctx.accounts.seller.key(), contract.seller, GigContractError::InvalidSeller);
 
-    // Check if the contract is Active or pending.
-    require!(contract.status == HourlyContractStatus::Active || contract.status == HourlyContractStatus::Pending, GigContractError::CantRelease);
+    // Check if the contract is Paid.
+    require!(contract.status == HourlyContractStatus::Paid, GigContractError::HourlyContractNotPaidYet);
 
     let token_program = &ctx.accounts.token_program;
     let source = &ctx.accounts.contract_ata;
@@ -41,13 +41,10 @@ pub fn seller_approve_hourly_contract (
     let buyer_referral_destination = &ctx.accounts.buyer_referral_ata;
     let seller_referral_destination = &ctx.accounts.seller_referral_ata;
 
-    contract.status = HourlyContractStatus::Pending;
+    contract.status = HourlyContractStatus::Active;
     contract.seller_approved = true;
 
     let total_balance = source.amount - 2 * contract.dispute;
-
-    // When both parties are satisfied with the result
-    contract.status = HourlyContractStatus::Completed;
 
     // To seller
     token::transfer(
@@ -60,7 +57,7 @@ pub fn seller_approve_hourly_contract (
         },
         &[&[CONTRACT_SEED.as_bytes(), &contract.contract_id.as_bytes(), &[ctx.bumps.contract]]],
     ),
-    ((total_balance) * 90 / 100 + contract.dispute).try_into().unwrap(),
+    ((total_balance) * 90 / 100).try_into().unwrap(),
     )?;
 
     let mut admin_amount: u64 = ((total_balance) * 10 / 100).try_into().unwrap();

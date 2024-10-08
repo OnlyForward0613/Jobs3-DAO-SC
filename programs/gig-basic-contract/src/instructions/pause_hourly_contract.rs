@@ -25,10 +25,9 @@ pub fn pause_hourly_contract(
     // Check if the signer is a correct buyer
     require_keys_eq!(ctx.accounts.buyer.key(), contract.buyer, GigContractError::InvalidActivator);
 
-    // Check if the contract is Created or Accepted.
-    require!(contract.status == HourlyContractStatus::Created || contract.status == HourlyContractStatus::Accepted, GigContractError::CantActivate);
-
-    contract.status = HourlyContractStatus::Ended;
+    // Check if the contract is not ended.
+    require!(contract.status != HourlyContractStatus::Ended, GigContractError::HourlyContractEnded);
+    
     contract.paused = true;
 
     msg!("Paused hourly contract successfully!");

@@ -32,10 +32,13 @@ pub fn update_worked_hour(
     // Check if the contract is not ended
     require!(contract.status != HourlyContractStatus::Ended, GigContractError::HourlyContractEnded);
 
-    // Check if the contract is Created or Accepted.
-    require!(contract.status == HourlyContractStatus::Created || contract.status == HourlyContractStatus::Accepted, GigContractError::CantActivate);
+    // Check if the contract is active.
+    require!(contract.status == HourlyContractStatus::Active, GigContractError::CantRelease);
 
-    contract.status = HourlyContractStatus::Active;
+    // Check if the worked hour is less than weekly_hours_limit
+    require!(contract.weekly_hours_limit >= week_worked_hour, GigContractError::WeeklyHoursLimitError);
+
+    contract.status = HourlyContractStatus::ReadyToPay;
     contract.week_worked_hour = week_worked_hour;
 
     msg!("Updated weekly worked hours successfully!");
