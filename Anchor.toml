@@ -9,13 +9,13 @@ gig_basic_contract = "FjPwNzWH81Gc69RruKgCeu6DZwSdSfDrXdjG84JyNS5e"
 gig_basic_contract = "CWSV9rB1AFGXLozdtGaDhi5747rnLA1Gd32eLwL9Nw5R"
 
 [programs.mainnet]
-gig_basic_contract = "GuqgMVMCLi9daQMHyhnLRGTpgpwNGU4yZXs9GK4SYrbS"
+gig_basic_contract = "CWSV9rB1AFGXLozdtGaDhi5747rnLA1Gd32eLwL9Nw5R"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "mainnet"
 wallet = "/home/rrr/.config/solana/id.json"
 
 [scripts]
