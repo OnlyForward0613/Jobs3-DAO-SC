@@ -1306,282 +1306,265 @@ describe("gig-basic-contract", () => {
 
 
   // Hourly gig part
-  it("Hourly-gig-part - start hourly gig contract on buyer!", async () => {
-    try {
-      // let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
-      // console.log("new contract before starting hourly contract on buyer!:", contractAccount);
+  // it("Hourly-gig-part - start hourly gig contract on buyer!", async () => {
+  //   try {
+  //     // let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
+  //     // console.log("new contract before starting hourly contract on buyer!:", contractAccount);
 
-      // Create a new uuid to use as a new contract id
-      contractId = uuid().slice(0, 8);
-      console.log("new contractId:", contractId);
+  //     // Create a new uuid to use as a new contract id
+  //     contractId = uuid().slice(0, 8);
+  //     console.log("new contractId:", contractId);
 
-      const amount = new anchor.BN(10 * Math.pow(10, decimal)); // 10 BPT token; // 10 USDC
-      const dispute = new anchor.BN(0.5 * Math.pow(10, decimal)); // 0.4 BPT token; // 0.4 USDC shoulb be 50 cent
-      const deadline = Math.floor(Date.now() / 1000) + (10 * 24 * 60 * 60); // 10 days in seconds from Current timestamp
+  //     const amount = new anchor.BN(10 * Math.pow(10, decimal)); // 10 BPT token; // 10 USDC
+  //     const dispute = new anchor.BN(0.5 * Math.pow(10, decimal)); // 0.4 BPT token; // 0.4 USDC shoulb be 50 cent
+  //     const deadline = Math.floor(Date.now() / 1000) + (10 * 24 * 60 * 60); // 10 days in seconds from Current timestamp
 
-      const [contract, bump] = anchor.web3.PublicKey.findProgramAddressSync(
-        [
-          Buffer.from(anchor.utils.bytes.utf8.encode(CONTRACT_SEED)),
-          Buffer.from(anchor.utils.bytes.utf8.encode(contractId)),
-        ],
-        program.programId
-      );
+  //     const [contract, bump] = anchor.web3.PublicKey.findProgramAddressSync(
+  //       [
+  //         Buffer.from(anchor.utils.bytes.utf8.encode(CONTRACT_SEED)),
+  //         Buffer.from(anchor.utils.bytes.utf8.encode(contractId)),
+  //       ],
+  //       program.programId
+  //     );
 
 
-      contractAddress = contract;
-      contractBump = bump;
-      console.log("contractAddress", contractAddress);
-      console.log("contractBump", contractBump);
+  //     contractAddress = contract;
+  //     contractBump = bump;
+  //     console.log("contractAddress", contractAddress);
+  //     console.log("contractBump", contractBump);
 
-      contractAta = await getOrCreateAssociatedTokenAccount(
-        program.provider.connection,
-        authKp,
-        payTokenMint,
-        contractAddress,
-        true
-      );
+  //     contractAta = await getOrCreateAssociatedTokenAccount(
+  //       program.provider.connection,
+  //       authKp,
+  //       payTokenMint,
+  //       contractAddress,
+  //       true
+  //     );
 
-      const hourly_rate = 30;
-      const weekly_hours_limit = 40;
+  //     const hourly_rate = 30;
+  //     const weekly_hours_limit = 40;
 
-      const tx = await program.methods
-        .startHourlyContractOnBuyer(contractId, hourly_rate, weekly_hours_limit, dispute, deadline)
-        .accounts({
-          contract: contractAddress,
-          buyer: firstKp.publicKey,
-          seller: secondKp.publicKey,
-          buyerAta: firstAta.address,
-          buyerReferral: null,
-          contractAta: contractAta.address,
-          payTokenMint,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([firstKp])
-        .rpc();
+  //     const tx = await program.methods
+  //       .startHourlyContractOnBuyer(contractId, hourly_rate, weekly_hours_limit, dispute, deadline)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         buyer: firstKp.publicKey,
+  //         seller: secondKp.publicKey,
+  //         buyerAta: firstAta.address,
+  //         buyerReferral: null,
+  //         contractAta: contractAta.address,
+  //         payTokenMint,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([firstKp])
+  //       .rpc();
 
-      console.log("Your transaction signature for starting hourly contract on buyer:", tx);
+  //     console.log("Your transaction signature for starting hourly contract on buyer:", tx);
    
-      let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
+  //     let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
 
-      console.log("new contract after starting hourly contract on buyer!:", contractAccount);
-    } catch (error) {
-      console.log("Error while starting hourly contract on buyer!:", error);
-    }
-  });
+  //     console.log("new contract after starting hourly contract on buyer!:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while starting hourly contract on buyer!:", error);
+  //   }
+  // });
 
-  it("Hourly-gig-part - activate hourly contract on seller!", async () => {
-    try {
-      let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
-      console.log("new contract before activating hourly contract on seller!:", contractAccount);
+  // it("Hourly-gig-part - activate hourly contract on seller!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
+  //     console.log("new contract before activating hourly contract on seller!:", contractAccount);
 
-      const tx = await program.methods
-        .activateHourlyContract(contractId, true)
-        .accounts({
-          contract: contractAddress,
-          seller: secondKp.publicKey,
-          sellerAta: secondAta.address,
-          sellerReferral: null,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([secondKp])
-        .rpc();
+  //     const tx = await program.methods
+  //       .activateHourlyContract(contractId, true)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         seller: secondKp.publicKey,
+  //         sellerAta: secondAta.address,
+  //         sellerReferral: null,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([secondKp])
+  //       .rpc();
 
-      console.log("Your transaction signature for activating hourly contract on seller:", tx);
+  //     console.log("Your transaction signature for activating hourly contract on seller:", tx);
    
-      contractAccount = await program.account.hourlyContract.fetch(contractAddress);
+  //     contractAccount = await program.account.hourlyContract.fetch(contractAddress);
 
-      console.log("new contract after activating hourly contract on seller!:", contractAccount);
-    } catch (error) {
-      console.log("Error while activating hourly contract on seller!:", error);
-    }
-  });
+  //     console.log("new contract after activating hourly contract on seller!:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while activating hourly contract on seller!:", error);
+  //   }
+  // });
 
-  it("Hourly-gig-part - update worked hour!", async () => {
-    try {
-      let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
-      console.log("new contract before updating worked hour on seller!:", contractAccount);
+  // it("Hourly-gig-part - update worked hour!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
+  //     console.log("new contract before updating worked hour on seller!:", contractAccount);
 
-      const tx = await program.methods
-        .updateWorkedHour(contractId, 30)
-        .accounts({
-          contract: contractAddress,
-          seller: secondKp.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([secondKp])
-        .rpc();
+  //     const tx = await program.methods
+  //       .updateWorkedHour(contractId, 30)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         seller: secondKp.publicKey,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([secondKp])
+  //       .rpc();
 
-      console.log("Your transaction signature for updating worked hour on seller:", tx);
+  //     console.log("Your transaction signature for updating worked hour on seller:", tx);
    
-      contractAccount = await program.account.hourlyContract.fetch(contractAddress);
+  //     contractAccount = await program.account.hourlyContract.fetch(contractAddress);
 
-      console.log("new contract after updating worked hour on seller!:", contractAccount);
-    } catch (error) {
-      console.log("Error while updating worked hour on seller!:", error);
-    }
-  });
+  //     console.log("new contract after updating worked hour on seller!:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while updating worked hour on seller!:", error);
+  //   }
+  // });
 
-  it("Hourly-gig-part - pay worked hours!", async () => {
-    try {
-      let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
-      console.log("new contract before paying worked hours on seller!:", contractAccount);
+  // it("Hourly-gig-part - pay worked hours!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
+  //     console.log("new contract before paying worked hours on seller!:", contractAccount);
 
-      const amount = new anchor.BN(contractAccount.weekWorkedHour * contractAccount.hourlyRate * Math.pow(10, decimal)); // 10 BPT token; // 10 USDC
-      const tx = await program.methods
-        .payWorkedHour(contractId, amount)
-        .accounts({
-          contract: contractAddress,
-          buyer: firstKp.publicKey,
-          buyerAta: firstAta.address,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([firstKp])
-        .rpc();
+  //     const amount = new anchor.BN(contractAccount.weekWorkedHour * contractAccount.hourlyRate * Math.pow(10, decimal)); // 10 BPT token; // 10 USDC
+  //     const tx = await program.methods
+  //       .payWorkedHour(contractId, amount)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         buyer: firstKp.publicKey,
+  //         buyerAta: firstAta.address,
+  //         contractAta: contractAta.address,
+  //         payTokenMint,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([firstKp])
+  //       .rpc();
 
-      console.log("Your transaction signature for paying worked hours on seller:", tx);
+  //     console.log("Your transaction signature for paying worked hours on seller:", tx);
    
-      contractAccount = await program.account.hourlyContract.fetch(contractAddress);
+  //     contractAccount = await program.account.hourlyContract.fetch(contractAddress);
 
-      console.log("new contract after paying worked hours on seller!:", contractAccount);
-    } catch (error) {
-      console.log("Error while paying worked hours on seller!:", error);
-    }
-  });
+  //     console.log("new contract after paying worked hours on seller!:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while paying worked hours on seller!:", error);
+  //   }
+  // });
 
-  it("Hourly-gig-part - seller approve hourly contract!", async () => {
-    try {
-      let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
-      console.log("new contract before approving hourly contract on seller!:", contractAccount);
+  // it("Hourly-gig-part - seller approve hourly contract!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
+  //     console.log("new contract before approving hourly contract on seller!:", contractAccount);
 
-      const tx = await program.methods
-        .sellerApproveHourlyContract(contractId, false)
-        .accounts({
-          contract: contractAddress,
-          seller: secondKp.publicKey,
-          sellerAta: secondAta.address,
-          buyerAta: firstAta.address,
-          adminAta: authAta.address,
-          buyerReferral,
-          sellerReferral,
-          buyerReferralAta,
-          sellerReferralAta,
-          payTokenMint,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([secondKp])
-        .rpc();
+  //     const tx = await program.methods
+  //       .sellerApproveHourlyContract(contractId, false)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         seller: secondKp.publicKey,
+  //         sellerAta: secondAta.address,
+  //         buyerAta: firstAta.address,
+  //         adminAta: authAta.address,
+  //         buyerReferral,
+  //         sellerReferral,
+  //         buyerReferralAta: buyerReferralAta.address,
+  //         sellerReferralAta: sellerReferralAta.address,
+  //         payTokenMint,
+  //         contractAta: contractAta.address,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([secondKp])
+  //       .rpc();
 
-      console.log("Your transaction signature for approving hourly contract on seller:", tx);
+  //     console.log("Your transaction signature for approving hourly contract on seller:", tx);
    
-      contractAccount = await program.account.hourlyContract.fetch(contractAddress);
+  //     contractAccount = await program.account.hourlyContract.fetch(contractAddress);
 
-      console.log("new contract after approving hourly contract on seller!:", contractAccount);
-    } catch (error) {
-      console.log("Error while approving hourly contract on seller!:", error);
-    }
-  });
+  //     console.log("new contract after approving hourly contract on seller!:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while approving hourly contract on seller!:", error);
+  //   }
+  // });
 
-  it("Hourly-gig-part - pause hourly contract!", async () => {
-    try {
-      let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
-      console.log("new contract before pausing hourly contract:", contractAccount);
+  // it("Hourly-gig-part - pause hourly contract!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
+  //     console.log("new contract before pausing hourly contract:", contractAccount);
 
-      const tx = await program.methods
-        .sellerApprove(contractId, false)
-        .accounts({
-          contract: contractAddress,
-          seller: secondKp.publicKey,
-          sellerAta: secondAta.address,
-          buyerAta: firstAta.address,
-          adminAta: authAta.address,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([secondKp])
-        .rpc();
+  //     const tx = await program.methods
+  //       .pauseHourlyContract(contractId)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         buyer: firstKp.publicKey,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([firstKp])
+  //       .rpc();
 
-      console.log("Your transaction signature for pausing hourly contract:", tx);
+  //     console.log("Your transaction signature for pausing hourly contract:", tx);
    
-      contractAccount = await program.account.hourlyContract.fetch(contractAddress);
+  //     contractAccount = await program.account.hourlyContract.fetch(contractAddress);
 
-      console.log("new contract after pausing hourly contract:", contractAccount);
-    } catch (error) {
-      console.log("Error while pausing hourly contract:", error);
-    }
-  });
+  //     console.log("new contract after pausing hourly contract:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while pausing hourly contract:", error);
+  //   }
+  // });
 
-  it("Hourly-gig-part - resume hourly contract!", async () => {
-    try {
-      let contractAccount = await program.account.contract.fetch(contractAddress);
-      console.log("new contract before approving on seller!:", contractAccount);
+  // it("Hourly-gig-part - resume hourly contract!", async () => {
+  //   try {
+  //     let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
+  //     console.log("new contract before resuming hourly contract!:", contractAccount);
 
-      const tx = await program.methods
-        .sellerApprove(contractId, false)
-        .accounts({
-          contract: contractAddress,
-          seller: secondKp.publicKey,
-          sellerAta: secondAta.address,
-          buyerAta: firstAta.address,
-          adminAta: authAta.address,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([secondKp])
-        .rpc();
+  //     const tx = await program.methods
+  //       .resumeHourlyContract(contractId)
+  //       .accounts({
+  //         contract: contractAddress,
+  //         buyer: firstKp.publicKey,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //       })
+  //       .signers([firstKp])
+  //       .rpc();
 
-      console.log("Your transaction signature for approving on seller:", tx);
+  //     console.log("Your transaction signature for resuming hourly contract:", tx);
    
-      contractAccount = await program.account.contract.fetch(contractAddress);
+  //     contractAccount = await program.account.hourlyContract.fetch(contractAddress);
 
-      console.log("new contract after approving on seller!:", contractAccount);
-    } catch (error) {
-      console.log("Error while approving on seller!:", error);
-    }
-  });
+  //     console.log("new contract after resuming hourly contract!:", contractAccount);
+  //   } catch (error) {
+  //     console.log("Error while resuming hourly contract!:", error);
+  //   }
+  // });
 
   it("Hourly-gig-part - end hourly contract!", async () => {
     try {
-      let contractAccount = await program.account.contract.fetch(contractAddress);
-      console.log("new contract before approving on seller!:", contractAccount);
+      let contractAccount = await program.account.hourlyContract.fetch(contractAddress);
+      console.log("new contract before ending hourly contract!:", contractAccount);
 
       const tx = await program.methods
-        .sellerApprove(contractId, false)
+        .endHourlyContract(contractId)
         .accounts({
           contract: contractAddress,
-          seller: secondKp.publicKey,
-          sellerAta: secondAta.address,
-          buyerAta: firstAta.address,
-          adminAta: authAta.address,
-          contractAta: contractAta.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          buyer: firstKp.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId,
         })
-        .signers([secondKp])
+        .signers([firstKp])
         .rpc();
 
-      console.log("Your transaction signature for approving on seller:", tx);
+      console.log("Your transaction signature for ending hourly contract:", tx);
    
-      contractAccount = await program.account.contract.fetch(contractAddress);
+      contractAccount = await program.account.hourlyContract.fetch(contractAddress);
 
-      console.log("new contract after approving on seller!:", contractAccount);
+      console.log("new contract after ending hourly contract!:", contractAccount);
     } catch (error) {
-      console.log("Error while approving on seller!:", error);
+      console.log("Error while ending hourly contract!:", error);
     }
   });
 });
