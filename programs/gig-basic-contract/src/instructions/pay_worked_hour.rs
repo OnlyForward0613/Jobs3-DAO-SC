@@ -35,7 +35,7 @@ pub fn pay_worked_hour(
     require!(contract.status == HourlyContractStatus::ReadyToPay, GigContractError::HourlyGigPayError);
 
     // powi(10.0, 6) for USDC, powi(10.0, 8) for BPT for test
-    require!(amount == (contract.week_worked_hour as f64 * f64::powi(10.0, 8)).round() as u64 , GigContractError::PayAmountError);
+    require!(amount == (contract.week_worked_hour as f64 * contract.hourly_rate as f64 * f64::powi(10.0, 8)).round() as u64 , GigContractError::PayAmountError);
 
     contract.status = HourlyContractStatus::Paid;
     contract.total_worked_hour += contract.week_worked_hour;
