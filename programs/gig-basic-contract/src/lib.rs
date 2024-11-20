@@ -134,4 +134,11 @@ pub mod gig_basic_contract {
     pub fn resume_hourly_contract(ctx: Context<ResumeHourlyContractContext>, contract_id: String) -> Result<()> {
         instructions::resume_hourly_contract::resume_hourly_contract(ctx, contract_id)
     }
+
+    /*
+        Job Listing on Employer side with $1 fee
+    */
+    pub fn job_listing_with_one_fee(ctx: Context<JobListingWithOneFeeContext>, contract_id: String) -> Result<()> {
+        instructions::job_listing_with_one_fee::job_listing_with_one_fee(ctx, contract_id)
+    }
 }
