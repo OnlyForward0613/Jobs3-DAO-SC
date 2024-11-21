@@ -13,6 +13,7 @@ pub use seller_approve_hourly_contract::*;
 pub use pause_hourly_contract::*;
 pub use resume_hourly_contract::*;
 pub use end_hourly_contract::*;
+pub use job_listing_with_one_fee_employer::*;
 
 pub mod start_contract_on_seller;
 pub mod start_contract_on_buyer;
@@ -29,3 +30,4 @@ pub mod seller_approve_hourly_contract;
 pub mod pause_hourly_contract;
 pub mod resume_hourly_contract;
 pub mod end_hourly_contract;
+pub mode job_listing_with_one_fee_employer;

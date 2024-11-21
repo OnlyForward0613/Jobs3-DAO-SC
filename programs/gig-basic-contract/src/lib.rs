@@ -138,7 +138,7 @@ pub mod gig_basic_contract {
     /*
         Job Listing on Employer side with $1 fee
     */
-    pub fn job_listing_with_one_fee(ctx: Context<JobListingWithOneFeeContext>, contract_id: String) -> Result<()> {
-        instructions::job_listing_with_one_fee::job_listing_with_one_fee(ctx, contract_id)
+    pub fn job_listing_with_one_fee_employer(ctx: Context<JobListingWithOneFeeEmployerContext>, contract_id: String) -> Result<()> {
+        instructions::job_listing_with_one_fee_employer::job_listing_with_one_fee_employer(ctx, contract_id)
     }
 }
