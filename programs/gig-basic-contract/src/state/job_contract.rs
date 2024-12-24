@@ -22,7 +22,9 @@ pub struct JobContract {
     pub employer_approved: bool,
     pub employee_approved: bool,
     pub admin_approved: bool,
-    pub status: ContractStatus,
+    pub status: JobContractStatus,
+    pub featured: bool,
+    pub featured_day: u8, 
 }
 
 impl JobContract {
@@ -48,12 +50,16 @@ impl Default for JobContract {
             employee_approved: false,
             admin_approved: false,
             status: JobContractStatus::NoExist,
+            featured: false,
+            featured_day: 0,
         }
     }
 }
 
 #[derive(Eq, AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
 pub enum JobContractStatus {
+    Initialized,
+    NotInitialized,
     NoExist,
     Created,
     Active,
@@ -61,4 +67,5 @@ pub enum JobContractStatus {
     Pending,
     Dispute,
     Completed,
+    Listed
 }

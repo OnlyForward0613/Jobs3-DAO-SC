@@ -1,0 +1,94 @@
+const anchor = require('@project-serum/anchor');
+const {ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, getAssociatedTokenAddress, Token} = require("@solana/spl-token");
+const uuid = require("uuid");
+const createInitAccountInstruction = require("@solana/spl-token");
+const { Connection, PublicKey, Keypair, SystemProgram, Transaction } = require('@solana/web3.js');
+
+const secret = require('/home/god/.config/solana/id.json');
+// const GigBasicContract = require("../target/types/gig_basic_contract");
+const newIDL = require("../target/idl/gig_basic_contract.json");
+
+let contractId = "a4fc3529";
+
+
+
+// Set up the connection to the Devnet
+const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+
+// Load your wallet
+const wallet = Keypair.fromSecretKey(new Uint8Array(secret)); // Replace with your secret key
+
+// Define the program ID of your deployed contract
+const programId = new PublicKey('4Wijqow1TA9kSs3o9XkYsb817abaTmNoqe6pohoNoqXx'); // Replace with your program ID
+
+// Create an Anchor provider
+const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
+console.log("------------- getting provider success -------------")
+anchor.setProvider(provider);
+
+async function TestJobListing() {
+    // Load the program
+    const idl = anchor.Program.fetchIdl(programId, provider).then((data) => {
+        console.log("here-------", data)
+    });
+    // const program = new anchor.Program(newIDL, programId); // Replace `idl` with your program's IDL
+    
+    // Generate a new contract ID
+    contractId = uuid.v4().slice(0, 8); // Replace with a unique contract ID
+
+    // Create associated token accounts if necessary
+    const employerAta = await createAssociatedTokenAccount(wallet.publicKey, "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+    const contractAta = await createAssociatedTokenAccount(programId, "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+
+    // Call the job_listing_with_one_fee_employer function
+    try {
+        const tx = await program.rpc.jobListingWithOneFeeEmployer(contractId, {
+            accounts: {
+                employer: wallet.publicKey,
+                jobContract: contractAta, // Replace with the actual job contract account
+                employerAta: employerAta,
+                contractAta: contractAta,
+                employerTokenAccount: employerAta,
+                programTokenAccount: contractAta,
+                tokenProgram: TOKEN_PROGRAM_ID,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                systemProgram: SystemProgram.programId,
+            },
+        });
+
+        console.log("Transaction successful with signature:", tx);
+    } catch (error) {
+        console.error("Transaction failed:", error);
+    }
+}
+
+async function createAssociatedTokenAccount(owner, mint) {
+    const associatedToken = await PublicKey.findProgramAddress(
+        [
+            owner.toBuffer(),
+        ],
+        ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+
+    const transaction = new Transaction().add(
+        SystemProgram.createAccount({
+            fromPubkey: owner,
+            newAccountPubkey: associatedToken[0],
+            lamports: await connection.getMinimumBalanceForRentExemption(165),
+            space: 165,
+            programId: TOKEN_PROGRAM_ID,
+        }),
+        Token.createInitAccountInstruction(
+            TOKEN_PROGRAM_ID,
+            mint,
+            associatedToken[0],
+            owner
+        )
+    );
+
+    await provider.sendAndConfirm(transaction, [wallet]);
+    return associatedToken[0];
+}
+
+// Run the test
+TestJobListing();

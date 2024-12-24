@@ -36,4 +36,6 @@ pub enum GigContractError {
     HourlyGigPayError,
     #[msg("Hourly Contract was not paid yet!")]
     HourlyContractNotPaidYet,
+    #[msg("Invalid featured day!")]
+    InvalidFeaturedDay,
 }

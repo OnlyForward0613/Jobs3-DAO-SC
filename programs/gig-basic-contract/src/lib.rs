@@ -11,7 +11,7 @@ pub mod constants;
 pub mod errors;
 pub mod state;
 
-declare_id!("CWSV9rB1AFGXLozdtGaDhi5747rnLA1Gd32eLwL9Nw5R");
+declare_id!("37hdsDzZaBeADsu4gTxc8XUhyvwYmC9zKpBdppSM8P6J");
 
 #[program]
 pub mod gig_basic_contract {
@@ -138,7 +138,14 @@ pub mod gig_basic_contract {
     /*
         Job Listing on Employer side with $1 fee
     */
-    pub fn job_listing_with_one_fee_employer(ctx: Context<JobListingWithOneFeeEmployerContext>, contract_id: String) -> Result<()> {
+    pub fn job_listing_with_one_fee_employer(ctx: Context<JobListingWithFeesEmployerContext>, contract_id: String) -> Result<()> {
         instructions::job_listing_with_one_fee_employer::job_listing_with_one_fee_employer(ctx, contract_id)
+    }
+
+    /*
+        Job Listing on Employer side with feature fee
+    */
+    pub fn job_listing_with_feature_employer(ctx: Context<JobListingWithFeatureEmployerContext>, contract_id: String, featured_day: u8) -> Result<()> {
+        instructions::job_listing_with_feature_employer::job_listing_with_feature_employer(ctx, contract_id, featured_day)
     }
 }

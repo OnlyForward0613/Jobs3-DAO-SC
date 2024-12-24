@@ -14,13 +14,24 @@ use crate::errors::{
     GigContractError,
 };
 
-pub fn job_listing_with_one_fee_employer(
-    ctx: Context<JobListingWithFeesEmployerContext>,
+pub fn job_listing_with_feature_employer(
+    ctx: Context<JobListingWithFeatureEmployerContext>,
     contract_id: String,
+    featured_day: u8,
 ) -> Result<()> {
-    msg!("Listing Job with $1 fee on employer side!");
+    msg!("Listing Job with featured fee on employer side!");
 
     let job_contract = &mut ctx.accounts.job_contract;
+
+    // Define the fees based on featured_day
+    let listing_fee = match featured_day {
+        1 => 21_000_000,  // 24 hours
+        3 => 36_000_000,  // 3 days
+        7 => 71_000_000,  // 7 days
+        14 => 100_000_000, // 14 days
+        30 => 150_000_000,// 30 days
+        _ => return Err(GigContractError::InvalidFeaturedDay.into()), // Handle invalid day
+    };
 
     // // Check if the signer is the correct employer
     // require_keys_eq!(ctx.accounts.employer.key(), job_contract.employer, GigContractError::InvalidActivator);
@@ -29,8 +40,11 @@ pub fn job_listing_with_one_fee_employer(
     // require!(contract.status != JobContractStatus::Created, GigContractError::HourlyContractEnded);
 
     // Define the fees
-    let listing_fee = 1_000_000; // 1 USDC = 0.000001 micro USDC
+
+
     let dispute_fee = 1_000_000; // Same assumption for dispute fee
+
+    
     
     // Define source address and destination address
     let employer_destination = &ctx.accounts.employer_ata;
@@ -63,7 +77,7 @@ pub fn job_listing_with_one_fee_employer(
     // let transfer_listing_fee_ctx = CpiContext::new(cpi_program.clone(), cpi_accounts);
     // SplTransfer::transfer(transfer_listing_fee_ctx, listing_fee)?;
 
-    msg!("Transferred listing fee of 1 USDC!");
+    msg!("Transferred listing fee of {} USDC!", listing_fee / 1_000_000);
 
     // if with_dispute {
     //     // Transfer dispute fee if applicable
@@ -82,7 +96,8 @@ pub fn job_listing_with_one_fee_employer(
     // Update contract status or any other necessary fields
     job_contract.contract_id = contract_id;
     job_contract.status = JobContractStatus::Created; // Example status update
-
+    job_contract.featured = true;
+    job_contract.featured_day = featured_day;
     msg!("Job listed successfully!");
     
     Ok(())
@@ -90,7 +105,7 @@ pub fn job_listing_with_one_fee_employer(
 
 #[derive(Accounts)]
 #[instruction(contract_id: String)]
-pub struct JobListingWithFeesEmployerContext<'info> {
+pub struct JobListingWithFeatureEmployerContext<'info> {
     #[account(mut)]
     pub employer: Signer<'info>,
     #[account(

@@ -51,7 +51,7 @@ pub fn job_listing_with_fees_employer(
     let transfer_listing_fee_ctx = CpiContext::new(cpi_program.clone(), cpi_accounts);
     SplTransfer::transfer(transfer_listing_fee_ctx, listing_fee)?;
 
-    msg!("Transferred listing fee of 1 SOL!");
+    msg!("Transferred listing fee of 1 USDC!");
 
     if with_dispute {
         // Transfer dispute fee if applicable
@@ -64,7 +64,7 @@ pub fn job_listing_with_fees_employer(
         let dispute_transfer_ctx = CpiContext::new(cpi_program.clone(), dispute_cpi_accounts);
         SplTransfer::transfer(dispute_transfer_ctx, dispute_fee)?;
 
-        msg!("Transferred dispute fee of 1 SOL!");
+        msg!("Transferred dispute fee of 1 USDC!");
     }
 
     // Update contract status or any other necessary fields
