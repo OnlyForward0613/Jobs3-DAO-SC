@@ -37,7 +37,7 @@ pub fn admin_withdraw_funds(
             msg!("Processing withdrawal for Gig contract.");
             program_balance = **ctx.accounts.contract.try_borrow_lamports()?;
             if program_balance < amount {
-                return Err(ErrorCode::InsufficientFunds.into());
+                return Err(GigContractError::InsufficientFunds.into());
             }
 
             // Create transfer instruction for standard contract account
@@ -52,7 +52,7 @@ pub fn admin_withdraw_funds(
             msg!("Processing withdrawal for job contract.");
             program_balance = **ctx.accounts.job_contract.try_borrow_lamports()?;
             if program_balance < amount {
-                return Err(ErrorCode::InsufficientFunds.into());
+                return Err(GigContractError::InsufficientFunds.into());
             }
 
             // Create transfer instruction for job contract account
@@ -62,7 +62,7 @@ pub fn admin_withdraw_funds(
                 &[ctx.accounts.job_contract.clone(), withdrawer_address.clone()],
             )?;
         }
-        _ => return Err(ErrorCode::InvalidContractType.into()), // Handle invalid type
+        _ => return Err(GigContractError::InvalidContractType.into()), // Handle invalid type
     }
 
     // // Invoke the transfer instruction
