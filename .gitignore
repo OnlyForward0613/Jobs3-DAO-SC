@@ -3,3 +3,4 @@
 yarn.lock
 /.anchor
 Cargo.lock
+/node_modules

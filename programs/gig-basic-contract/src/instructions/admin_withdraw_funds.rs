@@ -111,15 +111,17 @@ pub struct AdminWithdrawFundsContext<'info> {
     // #[account(mut)]
     // pub job_contract: AccountInfo<'info>
 
-    #[account(
-        mut, 
-        seeds = [
-            CONTRACT_SEED.as_bytes(), 
-            &contract_id.as_bytes()
-        ], 
-        bump, 
-    )]
+    // #[account(
+    //     mut, 
+    //     seeds = [
+    //         CONTRACT_SEED.as_bytes(), 
+    //         &contract_id.as_bytes()
+    //     ], 
+    //     bump, 
+    // )]
+    #[account(mut)]
     pub contract: Account<'info, Contract>,
+    #[account(mut)]
     pub job_contract: Account<'info, JobContract>
 
     // pub system_program: Program<'info, System>,
