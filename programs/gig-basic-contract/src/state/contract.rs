@@ -23,6 +23,7 @@ pub struct Contract {
     pub seller_approved: bool,
     pub admin_approved: bool,
     pub status: ContractStatus,
+    pub payment_method: String
 }
 
 impl Contract {
@@ -48,6 +49,7 @@ impl Default for Contract {
             seller_approved: false,
             admin_approved: false,
             status: ContractStatus::NoExist,
+            payment_method: "USDC".to_string()
         }
     }
 }
