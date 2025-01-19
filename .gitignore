@@ -1,5 +1,4 @@
 /target
-/tests
 yarn.lock
 /.anchor
 Cargo.lock
