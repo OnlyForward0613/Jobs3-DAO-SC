@@ -50,7 +50,8 @@ pub fn start_contract_on_seller(
 
     contract.buyer_referral = anchor_lang::solana_program::pubkey!("3x9USDofKPb6rREu2dWe9rcvT4QMHQS1PrJ13WuZ1QL3");
     contract.seller_referral = anchor_lang::solana_program::pubkey!("3x9USDofKPb6rREu2dWe9rcvT4QMHQS1PrJ13WuZ1QL3");
-    
+    contract.payment_method = payment_method;
+
     if let Some(seller_referral) = &ctx.accounts.seller_referral {
         msg!("seller_referral provided: {}", seller_referral.key());
         contract.seller_referral = seller_referral.key();

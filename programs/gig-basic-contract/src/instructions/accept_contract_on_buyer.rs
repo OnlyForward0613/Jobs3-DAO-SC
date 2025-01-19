@@ -17,8 +17,7 @@ use crate::errors::{
 
 pub fn accept_contract_on_buyer(
     ctx: Context<AcceptContractOnBuyerContext>,
-    contract_id: String,
-    payment_method: String
+    contract_id: String
 ) -> Result<()> {
     msg!("Accepting contact on buyer side!");
     let contract = &mut ctx.accounts.contract;
@@ -41,7 +40,7 @@ pub fn accept_contract_on_buyer(
         contract.buyer_referral = buyer_referral.key();
     }
 
-    if payment_method == "USDC" {
+    if contract.payment_method == "USDC" {
         // Transfer paytoken(amount + dispute) to the contract account
         token::transfer(
             CpiContext::new(
@@ -55,7 +54,7 @@ pub fn accept_contract_on_buyer(
             (contract.amount + contract.dispute).try_into().unwrap(),
         )?;
         msg!("Contract accepted successfully using USDC")
-    } else if payment_method == "SOL" {
+    } else if contract.payment_method == "SOL" {
         let lamports_to_transfer = contract.amount + contract.dispute;
         **ctx.accounts.contract.try_borrow_mut_lamports()? += lamports_to_transfer;
         **authority.try_borrow_mut_lamports()? -= lamports_to_transfer;

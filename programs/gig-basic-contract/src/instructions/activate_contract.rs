@@ -42,18 +42,24 @@ pub fn activate_contract(
     }
 
     if with_dispute ==  true {
-         // Transfer paytoken(dispute) to the contract account
-        token::transfer(
-            CpiContext::new(
-                token_program.to_account_info(),
-                SplTransfer {
-                    from: source.to_account_info().clone(),
-                    to: destination.to_account_info().clone(),
-                    authority: authority.to_account_info().clone(),
-                },
-            ),
-            contract.dispute,
-        )?;
+        if contract.payment_method == "USDC" {
+            // Transfer paytoken(dispute) to the contract account
+           token::transfer(
+               CpiContext::new(
+                   token_program.to_account_info(),
+                   SplTransfer {
+                       from: source.to_account_info().clone(),
+                       to: destination.to_account_info().clone(),
+                       authority: authority.to_account_info().clone(),
+                   },
+               ),
+               contract.dispute,
+           )?;
+        } else if payment_method == "SOL" {
+            let lamports_to_transfer = amount + dispute;
+        **ctx.accounts.contract.try_borrow_mut_lamports()? += lamports_to_transfer;
+        **authority.try_borrow_mut_lamports()? -= lamports_to_transfer;
+        }
     }
 
     msg!("Contract activated successfully!");
