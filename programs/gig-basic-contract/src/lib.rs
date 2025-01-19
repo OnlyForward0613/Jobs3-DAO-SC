@@ -30,8 +30,8 @@ pub mod gig_basic_contract {
         Seller will start by calling this function wiht just dispute fee.
     */
     
-    pub fn start_contract_on_seller(ctx: Context<StartContractOnSellerContext>, contract_id: String, amount: u64, dispute: u64, deadline: u32) -> Result<()> {
-        instructions::start_contract_on_seller::start_contract_on_seller(ctx, contract_id, amount, dispute, deadline)
+    pub fn start_contract_on_seller(ctx: Context<StartContractOnSellerContext>, contract_id: String, amount: u64, dispute: u64, deadline: u32, payment_method: String) -> Result<()> {
+        instructions::start_contract_on_seller::start_contract_on_seller(ctx, contract_id, amount, dispute, deadline, payment_method)
     }
 
     /* 

@@ -71,7 +71,7 @@ pub fn start_contract_on_buyer(
             ),
             (amount + dispute).try_into().unwrap(),
         )?;
-        msg!("Payment successfully deposited to the gig contract with {}{}", amount, payment_method);
+        msg!("Payment successfully deposited to the gig contract on buyer side with {}{}", amount, payment_method);
     } else if payment_method == "SOL" {
         let lamports_to_transfer = amount + dispute;
         **ctx.accounts.contract.try_borrow_mut_lamports()? += lamports_to_transfer;
