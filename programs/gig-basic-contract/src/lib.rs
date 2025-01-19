@@ -38,8 +38,8 @@ pub mod gig_basic_contract {
         Buyer will accept the contract after seller creates a new contract.
         by calling this function with payment amount and dispute fee. 
     */
-    pub fn accept_contract_on_buyer(ctx: Context<AcceptContractOnBuyerContext>, contract_id: String,) -> Result<()> {
-        instructions::accept_contract_on_buyer::accept_contract_on_buyer(ctx, contract_id)
+    pub fn accept_contract_on_buyer(ctx: Context<AcceptContractOnBuyerContext>, contract_id: String, payment_method: String) -> Result<()> {
+        instructions::accept_contract_on_buyer::accept_contract_on_buyer(ctx, contract_id, payment_method)
     }
 
     /* 
