@@ -148,6 +148,7 @@ pub mod gig_basic_contract {
     pub fn job_listing_with_feature_employer(ctx: Context<JobListingWithFeatureEmployerContext>, contract_id: String, featured_day: u8) -> Result<()> {
         instructions::job_listing_with_feature_employer::job_listing_with_feature_employer(ctx, contract_id, featured_day)
     }
+    
     /*
         Admin will withdraw funds from the contract
     */
