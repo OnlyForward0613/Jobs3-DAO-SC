@@ -55,10 +55,10 @@ pub fn activate_contract(
                ),
                contract.dispute,
            )?;
-        } else if payment_method == "SOL" {
-            let lamports_to_transfer = amount + dispute;
-        **ctx.accounts.contract.try_borrow_mut_lamports()? += lamports_to_transfer;
-        **authority.try_borrow_mut_lamports()? -= lamports_to_transfer;
+        } else if contract.payment_method == "SOL" {
+            let lamports_to_transfer = contract.dispute;
+            **ctx.accounts.contract.try_borrow_mut_lamports()? += lamports_to_transfer;
+            **authority.try_borrow_mut_lamports()? -= lamports_to_transfer;
         }
     }
 

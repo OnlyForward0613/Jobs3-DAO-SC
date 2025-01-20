@@ -71,7 +71,7 @@ pub fn start_contract_on_seller(
             dispute,
         )?;
         msg!("Payment successfully deposited to the gig contract on seller side with {}{}", amount, payment_method);
-    } else payment_method == "SOL" {
+    } else if payment_method == "SOL" {
         let lamports_to_transfer = amount + dispute;
         **ctx.accounts.contract.try_borrow_mut_lamports += lamports_to_transfer;
         **authority.try_borrow_mut_lamports

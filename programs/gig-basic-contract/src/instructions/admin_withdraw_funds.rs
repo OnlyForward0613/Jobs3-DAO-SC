@@ -7,6 +7,7 @@ use anchor_spl::{
 use std::mem::size_of;
 
 use crate::state::contract::*;
+use crate::state::job_contract::*;
 use crate::constants::{
     CONTRACT_SEED,
     PAY_TOKEN_MINT_ADDRESS,
