@@ -212,6 +212,16 @@ describe("Admin Withdraw", () => {
       .rpc();
 
     console.log("Transaction signature", tx);
+
+    const postBalance = await provider.connection.getTokenAccountBalance(contractAta);
+    console.log("Contract token balance: ", contractAta.toBase58(), "\n", postBalance.value.uiAmount);
+    
+
+    const withdrawAddressPostBalance = await provider.connection.getTokenAccountBalance(withdrawATA.address);
+    console.log("Withdraw address balance: ", withdrawATA.address.toBase58(), "\n", contractId, withdrawAddressPostBalance.value.uiAmount);
+
+
+
   });
 
 //   it("Should list a job with a featured fee on the employer side", async () => {

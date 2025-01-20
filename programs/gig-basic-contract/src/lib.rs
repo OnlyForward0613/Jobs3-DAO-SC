@@ -152,6 +152,6 @@ pub mod gig_basic_contract {
         Admin will withdraw funds from the contract
     */
     pub fn admin_withdraw_job_contract(ctx: Context<AdminWithdrawJobContractContext>, contract_id: String) -> Result<()> {
-        instructions::admin_withdraw::admin_withdraw_job_contract(ctx, contract_id)
+        instructions::admin_withdraw_job::admin_withdraw_job_contract(ctx, contract_id)
     }
 }
