@@ -17,7 +17,7 @@ use crate::errors::{
 
 pub fn accept_contract_on_buyer(
     ctx: Context<AcceptContractOnBuyerContext>,
-    contract_id: String
+    contract_id: String,
 ) -> Result<()> {
     msg!("Accepting contact on buyer side!");
     let contract = &mut ctx.accounts.contract;
@@ -40,26 +40,18 @@ pub fn accept_contract_on_buyer(
         contract.buyer_referral = buyer_referral.key();
     }
 
-    if contract.payment_method == "USDC" {
-        // Transfer paytoken(amount + dispute) to the contract account
-        token::transfer(
-            CpiContext::new(
-                token_program.to_account_info(),
-                SplTransfer {
-                    from: source.to_account_info().clone(),
-                    to: destination.to_account_info().clone(),
-                    authority: authority.to_account_info().clone(),
-                },
-            ),
-            (contract.amount + contract.dispute).try_into().unwrap(),
-        )?;
-        msg!("Contract accepted successfully using USDC")
-    } else if contract.payment_method == "SOL" {
-        let lamports_to_transfer = contract.amount + contract.dispute;
-        **ctx.accounts.contract.try_borrow_mut_lamports()? += lamports_to_transfer;
-        **authority.try_borrow_mut_lamports()? -= lamports_to_transfer;
-        msg!("Contract accepted successfully using SOL");
-    }
+    // Transfer paytoken(amount + dispute) to the contract account
+    token::transfer(
+    CpiContext::new(
+        token_program.to_account_info(),
+        SplTransfer {
+            from: source.to_account_info().clone(),
+            to: destination.to_account_info().clone(),
+            authority: authority.to_account_info().clone(),
+        },
+    ),
+    (contract.amount + contract.dispute).try_into().unwrap(),
+    )?;
 
     msg!("Contract accepted successfully!");
     Ok(())

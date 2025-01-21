@@ -22,7 +22,6 @@ pub fn start_contract_on_seller(
     amount: u64, 
     dispute: u64, // $0.5 for now
     deadline: u32,
-    payment_method: String // Using SOL or USDC
 ) -> Result<()> {
     msg!("Creating a new contract with the following Id: {}", contract_id);
 
@@ -50,32 +49,24 @@ pub fn start_contract_on_seller(
 
     contract.buyer_referral = anchor_lang::solana_program::pubkey!("3x9USDofKPb6rREu2dWe9rcvT4QMHQS1PrJ13WuZ1QL3");
     contract.seller_referral = anchor_lang::solana_program::pubkey!("3x9USDofKPb6rREu2dWe9rcvT4QMHQS1PrJ13WuZ1QL3");
-    contract.payment_method = payment_method;
-
+    
     if let Some(seller_referral) = &ctx.accounts.seller_referral {
         msg!("seller_referral provided: {}", seller_referral.key());
         contract.seller_referral = seller_referral.key();
     }
 
-    if payment_method == "USDC" {
-        // Transfer paytoken(dispute) to the contract account
-        token::transfer(
-            CpiContext::new(
-                token_program.to_account_info(),
-                SplTransfer {
-                    from: source.to_account_info().clone(),
-                    to: destination.to_account_info().clone(),
-                    authority: authority.to_account_info().clone(),
-                },
-            ),
-            dispute,
-        )?;
-        msg!("Payment successfully deposited to the gig contract on seller side with {}{}", amount, payment_method);
-    } else if payment_method == "SOL" {
-        let lamports_to_transfer = amount + dispute;
-        **ctx.accounts.contract.try_borrow_mut_lamports += lamports_to_transfer;
-        **authority.try_borrow_mut_lamports
-    }
+    // Transfer paytoken(dispute) to the contract account
+    token::transfer(
+        CpiContext::new(
+            token_program.to_account_info(),
+            SplTransfer {
+                from: source.to_account_info().clone(),
+                to: destination.to_account_info().clone(),
+                authority: authority.to_account_info().clone(),
+            },
+        ),
+        dispute,
+    )?;
   
     msg!("New contract created successfully on seller side!");
     Ok(())

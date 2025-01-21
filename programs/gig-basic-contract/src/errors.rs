@@ -38,8 +38,4 @@ pub enum GigContractError {
     HourlyContractNotPaidYet,
     #[msg("Invalid featured day!")]
     InvalidFeaturedDay,
-    #[msg("Insufficient Funds!")]
-    InsufficientFunds,
-    #[msg("Invalid contract type specified.")]
-    InvalidContractType,
 }

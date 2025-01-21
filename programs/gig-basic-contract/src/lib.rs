@@ -11,7 +11,7 @@ pub mod constants;
 pub mod errors;
 pub mod state;
 
-declare_id!("37hdsDzZaBeADsu4gTxc8XUhyvwYmC9zKpBdppSM8P6J");
+declare_id!("2up6Coari5SuDz8bWaLDLdmZCREwKVztoXVNcDx8Dg29");
 
 #[program]
 pub mod gig_basic_contract {
@@ -22,23 +22,23 @@ pub mod gig_basic_contract {
         by calling this function with payment amount and dispute fee. 
     */
     
-    pub fn start_contract_on_buyer(ctx: Context<StartContractOnBuyerContext>, contract_id: String, amount: u64, dispute: u64, deadline: u32, payment_method: String) -> Result<()> {
-        instructions::start_contract_on_buyer::start_contract_on_buyer(ctx, contract_id, amount, dispute, deadline, payment_method)
+    pub fn start_contract_on_buyer(ctx: Context<StartContractOnBuyerContext>, contract_id: String, amount: u64, dispute: u64, deadline: u32) -> Result<()> {
+        instructions::start_contract_on_buyer::start_contract_on_buyer(ctx, contract_id, amount, dispute, deadline)
     }
 
     /* 
         Seller will start by calling this function wiht just dispute fee.
     */
     
-    pub fn start_contract_on_seller(ctx: Context<StartContractOnSellerContext>, contract_id: String, amount: u64, dispute: u64, deadline: u32, payment_method: String) -> Result<()> {
-        instructions::start_contract_on_seller::start_contract_on_seller(ctx, contract_id, amount, dispute, deadline, payment_method)
+    pub fn start_contract_on_seller(ctx: Context<StartContractOnSellerContext>, contract_id: String, amount: u64, dispute: u64, deadline: u32) -> Result<()> {
+        instructions::start_contract_on_seller::start_contract_on_seller(ctx, contract_id, amount, dispute, deadline)
     }
 
     /* 
         Buyer will accept the contract after seller creates a new contract.
         by calling this function with payment amount and dispute fee. 
     */
-    pub fn accept_contract_on_buyer(ctx: Context<AcceptContractOnBuyerContext>, contract_id: String) -> Result<()> {
+    pub fn accept_contract_on_buyer(ctx: Context<AcceptContractOnBuyerContext>, contract_id: String,) -> Result<()> {
         instructions::accept_contract_on_buyer::accept_contract_on_buyer(ctx, contract_id)
     }
 
@@ -148,11 +148,11 @@ pub mod gig_basic_contract {
     pub fn job_listing_with_feature_employer(ctx: Context<JobListingWithFeatureEmployerContext>, contract_id: String, featured_day: u8) -> Result<()> {
         instructions::job_listing_with_feature_employer::job_listing_with_feature_employer(ctx, contract_id, featured_day)
     }
-
+    
     /*
-        Admin withdraw function from the program account
+        Admin will withdraw funds from the contract
     */
-    pub fn admin_withdraw_funds(ctx: Context<AdminWithdrawFundsContext>, amount: u64, withdrawer_address: Pubkey, contract_type: u8) -> Result<()> {
-        instructions::admin_withdraw_funds::admin_withdraw_funds(ctx, amount, withdrawer_address, contract_type)
+    pub fn admin_withdraw_job_contract(ctx: Context<AdminWithdrawJobContractContext>, contract_id: String) -> Result<()> {
+        instructions::admin_withdraw_job::admin_withdraw_job_contract(ctx, contract_id)
     }
 }

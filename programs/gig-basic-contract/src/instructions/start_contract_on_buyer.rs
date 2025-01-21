@@ -22,7 +22,6 @@ pub fn start_contract_on_buyer(
     amount: u64, 
     dispute: u64, // $0.5 for now
     deadline: u32,
-    payment_method: String // using Sol or USDC
 ) -> Result<()> {
     msg!("Creating a new contract with the following Id: {}", contract_id);
 
@@ -51,33 +50,23 @@ pub fn start_contract_on_buyer(
     contract.buyer_referral = anchor_lang::solana_program::pubkey!("3x9USDofKPb6rREu2dWe9rcvT4QMHQS1PrJ13WuZ1QL3");
     contract.seller_referral = anchor_lang::solana_program::pubkey!("3x9USDofKPb6rREu2dWe9rcvT4QMHQS1PrJ13WuZ1QL3");
 
-    contract.payment_method = payment_method;
-
     if let Some(buyer_referral) = &ctx.accounts.buyer_referral {
         msg!("buyer_referral provided: {}", buyer_referral.key());
         contract.buyer_referral = buyer_referral.key();
     }
 
-    if payment_method == "USDC" {
-        // Transfer paytoken(amount + dispute) to the contract account using USDC
-        token::transfer(
-            CpiContext::new(
-                token_program.to_account_info(),
-                SplTransfer {
-                    from: source.to_account_info().clone(),
-                    to: destination.to_account_info().clone(),
-                    authority: authority.to_account_info().clone(),
-                },
-            ),
-            (amount + dispute).try_into().unwrap(),
-        )?;
-        msg!("Payment successfully deposited to the gig contract on buyer side with {}{}", amount, payment_method);
-    } else if payment_method == "SOL" {
-        let lamports_to_transfer = amount + dispute;
-        **ctx.accounts.contract.try_borrow_mut_lamports()? += lamports_to_transfer;
-        **authority.try_borrow_mut_lamports()? -= lamports_to_transfer;
-        msg!("Payment successfully deposited to the gig contract with {}{}", amount, payment_method);
-    }
+    // Transfer paytoken(amount + dispute) to the contract account
+    token::transfer(
+        CpiContext::new(
+            token_program.to_account_info(),
+            SplTransfer {
+                from: source.to_account_info().clone(),
+                to: destination.to_account_info().clone(),
+                authority: authority.to_account_info().clone(),
+            },
+        ),
+        (amount + dispute).try_into().unwrap(),
+    )?;
   
     msg!("New contract created successfully on buyer side!");
     Ok(())
