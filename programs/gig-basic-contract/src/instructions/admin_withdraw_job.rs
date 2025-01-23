@@ -56,7 +56,8 @@ pub struct AdminWithdrawJobContractContext<'info> {
     
     pub token_program: Program<'info, Token>,
 
-    #[account(mut)]
+    #[account(mut,
+    constraint = withdraw_address.owner == ADMIN_ADDRESS.key())]
     pub withdraw_address: Account<'info, TokenAccount>,
 
     pub system_program: Program<'info, System>,

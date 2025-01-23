@@ -11,7 +11,7 @@ pub mod constants;
 pub mod errors;
 pub mod state;
 
-declare_id!("37hdsDzZaBeADsu4gTxc8XUhyvwYmC9zKpBdppSM8P6J");
+declare_id!("6i7THycw37PvBMKPuC8gTD5GjdUeJ5XcWL5Y3Q7FrRtR");
 
 #[program]
 pub mod gig_basic_contract {
