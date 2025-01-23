@@ -6,6 +6,7 @@ use crate::errors::*;
 use crate::state::job_contract::*;
 use crate::state::hourly_contract::*;
 
+
 pub fn admin_withdraw_job_contract(ctx: Context<AdminWithdrawJobContractContext>, contract_id: String) -> Result<()> {
     // Log the contract_id for debugging
     msg!("Contract ID: {}", contract_id);
@@ -56,7 +57,10 @@ pub struct AdminWithdrawJobContractContext<'info> {
     
     pub token_program: Program<'info, Token>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = withdraw_address.owner == ADMIN_ADDRESS.key()
+    )]
     pub withdraw_address: Account<'info, TokenAccount>,
 
     pub system_program: Program<'info, System>,

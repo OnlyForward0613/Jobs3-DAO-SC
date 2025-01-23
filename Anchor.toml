@@ -17,7 +17,7 @@ gig_basic_contract = "2up6Coari5SuDz8bWaLDLdmZCREwKVztoXVNcDx8Dg29"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Devnet"
+cluster = "mainnet"
 wallet = "/home/god/.config/solana/id.json"
 
 [scripts]
