@@ -33,73 +33,92 @@ pub fn job_listing_with_feature_employer(
         _ => return Err(GigContractError::InvalidFeaturedDay.into()), // Handle invalid day
     };
 
-    // // Check if the signer is the correct employer
-    // require_keys_eq!(ctx.accounts.employer.key(), job_contract.employer, GigContractError::InvalidActivator);
-
-    // Check if the contract is not ended.
-    // require!(contract.status != JobContractStatus::Created, GigContractError::HourlyContractEnded);
-
-    // Define the fees
-
-
     let dispute_fee = 1_000_000; // Same assumption for dispute fee
 
-    
-    
-    // Define source address and destination address
-    let employer_destination = &ctx.accounts.employer_ata;
-    let contract_destination = &ctx.accounts.contract_ata;
+    // Define source and destination token accounts
+    let employer_ata = &ctx.accounts.employer_ata;
+    let contract_ata = &ctx.accounts.contract_ata;
     let authority = &ctx.accounts.employer;
     let token_program = &ctx.accounts.token_program;
 
-    token::transfer(
-        CpiContext::new(
-            token_program.to_account_info(),
-            SplTransfer {
-                from: employer_destination.to_account_info().clone(),
-                to: contract_destination.to_account_info().clone(),
-                authority: authority.to_account_info().clone(),
-            },
-        ),
-        listing_fee.try_into().unwrap(),
-    )?;
+    let referral_address_to_exclude = "3x9USDofKPb6rREu2dWe9rcvT4QMHQS1PrJ13WuZ1QL3";
 
-    // // Transfer listing fee from employer to the program's account
-    // let cpi_accounts = SplTransfer {
-    //     from: employer_destination.to_account_info().clone(),
-    //     to: contract_destination.to_account_info().clone(),
-    //     authority: authority.to_account_info().clone(),
-    // };
-    
-    // let cpi_program = ctx.accounts.token_program.to_account_info();
-    
-    // // Transfer listing fee
-    // let transfer_listing_fee_ctx = CpiContext::new(cpi_program.clone(), cpi_accounts);
-    // SplTransfer::transfer(transfer_listing_fee_ctx, listing_fee)?;
+    // Handle referral transfer if a referral account is provided and not the excluded address
+    if let Some(employer_referral_ata) = &ctx.accounts.employer_referral_ata {
+        if employer_referral_ata.key().to_string() != referral_address_to_exclude {
+            msg!("Employer referral provided: {}", employer_referral_ata.key());
+            job_contract.employer_referral = employer_referral_ata.key();
+
+            let referral_amount = (listing_fee * 10 / 100) as u64;
+            let contract_amount = (listing_fee * 90 / 100) as u64;
+
+            // Transfer referral bonus
+            token::transfer(
+                CpiContext::new(
+                    token_program.to_account_info(),
+                    SplTransfer {
+                        from: employer_ata.to_account_info(),
+                        to: employer_referral_ata.to_account_info(),
+                        authority: authority.to_account_info(),
+                    }
+                ),
+                referral_amount
+            )?;
+
+            // Transfer the remaining amount to the contract
+            token::transfer(
+                CpiContext::new(
+                    token_program.to_account_info(),
+                    SplTransfer {
+                        from: employer_ata.to_account_info(),
+                        to: contract_ata.to_account_info(),
+                        authority: authority.to_account_info(),
+                    },
+                ),
+                contract_amount
+            )?;
+        } else {
+            msg!("Employer referral provided, but is the excluded address.  Skipping referral bonus.");
+
+            // Transfer the full listing fee to the contract
+            token::transfer(
+                CpiContext::new(
+                    token_program.to_account_info(),
+                    SplTransfer {
+                        from: employer_ata.to_account_info(),
+                        to: contract_ata.to_account_info(),
+                        authority: authority.to_account_info(),
+                    },
+                ),
+                listing_fee as u64,
+            )?;
+        }
+    } else {
+        msg!("Employer referral not provided.");
+
+        // Transfer the full listing fee to the contract
+        token::transfer(
+            CpiContext::new(
+                token_program.to_account_info(),
+                SplTransfer {
+                    from: employer_ata.to_account_info(),
+                    to: contract_ata.to_account_info(),
+                    authority: authority.to_account_info(),
+                },
+            ),
+            listing_fee as u64,
+        )?;
+    }
 
     msg!("Transferred listing fee of {} USDC!", listing_fee / 1_000_000);
 
-    // if with_dispute {
-    //     // Transfer dispute fee if applicable
-    //     let dispute_cpi_accounts = SplTransfer {
-    //         from: ctx.accounts.employer_token_account.to_account_info(),
-    //         to: ctx.accounts.program_token_account.to_account_info(),
-    //         authority: ctx.accounts.employer.to_account_info(),
-    //     };
-
-    //     let dispute_transfer_ctx = CpiContext::new(cpi_program.clone(), dispute_cpi_accounts);
-    //     SplTransfer::transfer(dispute_transfer_ctx, dispute_fee)?;
-
-    //     msg!("Transferred dispute fee of 1 USDC!");
-    // }
-
-    // Update contract status or any other necessary fields
+    // Update contract status
     job_contract.contract_id = contract_id;
-    job_contract.status = JobContractStatus::Created; // Example status update
+    job_contract.status = JobContractStatus::Created;
     job_contract.featured = true;
     job_contract.featured_day = featured_day;
     msg!("Job listed successfully!");
-    
+
     Ok(())
 }
 
@@ -113,9 +132,9 @@ pub struct JobListingWithFeatureEmployerContext<'info> {
         space = JobContract::LEN + 8,
         payer = employer,
         seeds = [
-            CONTRACT_SEED.as_bytes(), 
+            CONTRACT_SEED.as_bytes(),
             &contract_id.as_bytes()
-        ], 
+        ],
         bump,
     )]
     pub job_contract: Account<'info, JobContract>,
@@ -123,6 +142,16 @@ pub struct JobListingWithFeatureEmployerContext<'info> {
     pub employer_ata: Account<'info, TokenAccount>,
     #[account(mut)]
     pub contract_ata: Account<'info, TokenAccount>,
+    // Referral is optional, but MUST be a TokenAccount if provided
+    // #[account(mut)]
+    // pub employer_referral: Option<Account<'info, TokenAccount>>,
+    // Optional
+    #[account(
+        mut, 
+        associated_token::mint = PAY_TOKEN_MINT_ADDRESS,
+        associated_token::authority = job_contract.employer_referral,
+    )]
+    pub employer_referral_ata: Option<Account<'info, TokenAccount>>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,

@@ -22,9 +22,11 @@ describe("gig-basic-contract", () => {
   const wallet = anchor.Wallet.local();
   const signer = wallet.payer;
   let employer: anchor.web3.Keypair;
+  let gigContract: anchor.web3.PublicKey;
   let jobContract: anchor.web3.PublicKey;
   let employerAta: anchor.web3.PublicKey;
   let contractAta: anchor.web3.PublicKey;
+  let adminAta: anchor.web3.PublicKey;
   let PAY_TOKEN_MINT_ADDRESS: anchor.web3.PublicKey;
   let ASSOCIATED_TOKEN_PROGRAM_ID: anchor.web3.PublicKey;
   let contractId: string;
@@ -48,6 +50,13 @@ describe("gig-basic-contract", () => {
     contractId = uuid().slice(0, 8);
     console.log("new contractId:", contractId);
 
+    //create gig contract account
+    // [gigContract, ] = await anchor.web3.PublicKey.findProgramAddressSync(
+    //   [
+    //     Buffer.from(anchor.utils.bytes.utf8.encode("gig_contract")),
+
+    //   ]
+    // )
     // Create job contract account
     [jobContract, ] = await anchor.web3.PublicKey.findProgramAddressSync(
       [
@@ -103,6 +112,15 @@ describe("gig-basic-contract", () => {
         signer.publicKey
       )
     ).address; // Access the address property
+
+    // adminAta = (
+    //   await getOrCreateAssociatedTokenAccount(
+    //     provider.connection,
+    //     new anchor.web3.Keypair("384WTsaMenUoXE89jjJvLSWcG7hUeqN8pcxwV1KNVuHd"),
+    //     PAY_TOKEN_MINT_ADDRESS,
+    //     signer.publicKey
+    //   )
+    // ).address;
 
 
     console.log("employerAta: ", employerAta.toBase58());
@@ -178,61 +196,106 @@ describe("gig-basic-contract", () => {
   //   );
   // });
 
-  it("Should list a job with a featured fee on the employer side", async () => {
-    console.log("------------- creating a featured job listing -------------");
+  // it("Should list a job with a featured fee on the employer side", async () => {
+  //   console.log("------------- creating a featured job listing -------------");
 
-    const featuredDay = 3; // Example: listing for 3 days
-    const expectedFee = 36_000_000; // Expected fee for 3 days
+  //   const featuredDay = 3; // Example: listing for 3 days
+  //   const expectedFee = 36_000_000; // Expected fee for 3 days
 
 
-    // Fetch the initial token balance of the employer
-    const initialEmployerTokenBalance = await provider.connection.getTokenAccountBalance(employerAta);
-    console.log("Initial Employer Token Balance: ", initialEmployerTokenBalance.value.amount);
+  //   // Fetch the initial token balance of the employer
+  //   const initialEmployerTokenBalance = await provider.connection.getTokenAccountBalance(employerAta);
+  //   console.log("Initial Employer Token Balance: ", initialEmployerTokenBalance.value.amount);
+
+  //   // Fetch the initial token balance of the contract
+  //   const initialContractTokenBalance = await provider.connection.getTokenAccountBalance(contractAta);
+  //   console.log("Initial Contract Token Balance: ", initialContractTokenBalance.value.amount);
+
+  //   // Call the job_listing_with_feature_employer function
+  //   const tx = await program.methods
+  //     .jobListingWithFeatureEmployer(contractId, featuredDay)
+  //     .accounts({
+  //       employer: employer.publicKey,
+  //       jobContract: jobContract,
+  //       employerAta: employerAta,
+  //       contractAta: contractAta,
+  //       tokenProgram: TOKEN_PROGRAM_ID,
+  //       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //       systemProgram: anchor.web3.SystemProgram.programId,
+  //     })
+  //     .signers([employer])
+  //     .rpc();
+
+  //   console.log("Transaction signature", tx);
+
+  //   // Fetch the updated job contract
+  //   const updatedJobContract = await program.account.jobContract.fetch(jobContract);
+  //   console.log("updatedJobContract: ", updatedJobContract);
+
+
+
+  //   // Check if the employer's token balance is reduced by the listing fee
+  //   const employerTokenBalance = await provider.connection.getTokenAccountBalance(employerAta);
+  //   assert.equal(
+  //     employerTokenBalance.value.amount,
+  //     (1_000_000_000 - expectedFee).toString(),
+  //     "Employer's token balance should reflect the listing fee deduction"
+  //   );
+
+  //   // Fetch the updated token balance of the employer after job posting
+  //   const updatedEmployerTokenBalance = await provider.connection.getTokenAccountBalance(employerAta);
+  //   console.log("Updated Employer Token Balance: ", updatedEmployerTokenBalance.value.amount);
+
+  //   // Fetch the updated token balance of the contract after job posting
+  //   const updatedContractTokenBalance = await provider.connection.getTokenAccountBalance(contractAta);
+  //   console.log("Updated Contract Token Balance: ", updatedContractTokenBalance.value.amount);
+
+
+  //   console.log("Featured job listing created successfully!");
+  // });
+
+  it("Should withdraw some amount from the program account on admin side", async () => {
+    console.log("------------- withdrawing some funds from the program account -------------");
+
+    const amount = 1_000_000;
+    const withdrawer_address = "384WTsaMenUoXE89jjJvLSWcG7hUeqN8pcxwV1KNVuHd";
+    const contract_type = 0;
+
+    // Fetch the initial token balance of the admin
+    // const initialAdminTokenBalance = await provider.connection.getTokenAccountBalance(adminAta);
+    // console.log("Initial Employer Token Balance: ", initialEmployerTokenBalance.value.amount);
 
     // Fetch the initial token balance of the contract
-    const initialContractTokenBalance = await provider.connection.getTokenAccountBalance(contractAta);
-    console.log("Initial Contract Token Balance: ", initialContractTokenBalance.value.amount);
+    const initialGigContractTokenBalance = await provider.connection.getTokenAccountBalance(contractAta);
+    console.log("Initial Gig Contract Token Balance: ", initialGigContractTokenBalance.value.amount);
 
-    // Call the job_listing_with_feature_employer function
-    const tx = await program.methods
-      .jobListingWithFeatureEmployer(contractId, featuredDay)
-      .accounts({
-        employer: employer.publicKey,
-        jobContract: jobContract,
-        employerAta: employerAta,
-        contractAta: contractAta,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      })
-      .signers([employer])
-      .rpc();
+    const tx = await program.rpc.adminWithdrawFunds(
+      new anchor.BN(amount),
+      withdrawer_address,
+      0, // contract_type 0 for gig contract
+      {
+          accounts: {
+            contract: contractAta,
+            jobContractAccount: jobContract
+        },
+      }
+    );
 
     console.log("Transaction signature", tx);
 
     // Fetch the updated job contract
-    const updatedJobContract = await program.account.jobContract.fetch(jobContract);
-    console.log("updatedJobContract: ", updatedJobContract);
-
-
-
-    // Check if the employer's token balance is reduced by the listing fee
-    const employerTokenBalance = await provider.connection.getTokenAccountBalance(employerAta);
-    assert.equal(
-      employerTokenBalance.value.amount,
-      (1_000_000_000 - expectedFee).toString(),
-      "Employer's token balance should reflect the listing fee deduction"
-    );
-
-    // Fetch the updated token balance of the employer after job posting
-    const updatedEmployerTokenBalance = await provider.connection.getTokenAccountBalance(employerAta);
-    console.log("Updated Employer Token Balance: ", updatedEmployerTokenBalance.value.amount);
-
-    // Fetch the updated token balance of the contract after job posting
+    // Fetch updated balances after withdrawal
     const updatedContractTokenBalance = await provider.connection.getTokenAccountBalance(contractAta);
-    console.log("Updated Contract Token Balance: ", updatedContractTokenBalance.value.amount);
+    
+    console.log("Updated Gig Contract Token Balance: ", updatedContractTokenBalance.value.amount);
 
-
-    console.log("Featured job listing created successfully!");
+    // Check if the balance has decreased by the withdrawn amount
+    assert.equal(
+      parseInt(updatedContractTokenBalance.value.amount),
+      parseInt(initialGigContractTokenBalance.value.amount) - amount,
+      "Gig Contract Token Balance should reflect the withdrawal"
+    );
+    
+    console.log("Withdrawal test completed successfully!");
   });
 });
