@@ -1,320 +1,320 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
-import { GigContract } from "../target/types/gig_contract";
+import { Program, Wallet } from "@coral-xyz/anchor";
+import { expect, assert } from "chai";
 import {
+  getOrCreateAssociatedTokenAccount,
+  getAssociatedTokenAddressSync,
+  transfer,
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
-  getOrCreateAssociatedTokenAccount,
-  mintTo,
   createMint,
+  mintTo,
 } from "@solana/spl-token";
-import { Keypair, PublicKey } from "@solana/web3.js";
-import { assert } from "chai";
+import { GigBasicContract } from "../target/types/gig_basic_contract";
+import { v4 as uuid } from "uuid";
 
-describe("gig-contract", () => {
-  // Configure the client to use the local cluster.
+describe("Admin Withdraw", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
-
-  const program = anchor.workspace.GigContract as Program<GigContract>;
-
-  // Constants
-  const CONTRACT_SEED = "job-contract";
-
-  // Accounts
-  let employer: Keypair;
-  let jobContract: Keypair;
-  let employerAta: PublicKey;
-  let contractAta: PublicKey;
-  let employerReferral: Keypair;
-  let employerReferralAta: PublicKey;
+  const program = anchor.workspace
+    .GigBasicContract as Program<GigBasicContract>;
+  const wallet = anchor.Wallet.local();
+  const signer = wallet.payer;
+  let employer: anchor.web3.Keypair;
+  let jobContract: anchor.web3.PublicKey;
+  let employerAta: anchor.web3.PublicKey;
+  let contractAta: anchor.web3.PublicKey;
+  let employerReferral: anchor.web3.PublicKey;
+  let employerReferralAta: anchor.web3.PublicKey;
+  let PAY_TOKEN_MINT_ADDRESS: anchor.web3.PublicKey;
+  let ASSOCIATED_TOKEN_PROGRAM_ID: anchor.web3.PublicKey;
   let contractId: string;
-  let payTokenMint: PublicKey; // Custom token mint
 
   before(async () => {
-    employer = Keypair.generate();
-    employerReferral = Keypair.generate();
-    jobContract = Keypair.generate();
-    contractId = `contract-${Date.now()}`; // Unique contract ID
+    console.log("------------- before -------------");
+    // Create employer account
+    employer = anchor.web3.Keypair.generate();
+    employerReferral = new anchor.web3.PublicKey("2pVH34V7aaMnZn6f62Q7ZF444v5FgnWXF895gYtC9E9V");
+    // sol transfer
+    const transaction = new anchor.web3.Transaction();
 
-    // Airdrop SOL to employer
-    await provider.connection.confirmTransaction(
-      await provider.connection.requestAirdrop(
-        employer.publicKey,
-        2 * anchor.web3.LAMPORTS_PER_SOL
-      ),
-      "confirmed"
+    transaction.add(
+      anchor.web3.SystemProgram.transfer({
+        fromPubkey: signer.publicKey,
+        toPubkey: employer.publicKey,
+        lamports: 1 * anchor.web3.LAMPORTS_PER_SOL,
+      })
     );
 
-    await provider.connection.confirmTransaction(
-      await provider.connection.requestAirdrop(
-        employerReferral.publicKey,
-        2 * anchor.web3.LAMPORTS_PER_SOL
-      ),
-      "confirmed"
+    contractId = uuid().slice(0, 8);
+    console.log("new contractId:", contractId);
+
+    // Create job contract account
+    [jobContract] = await anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from(anchor.utils.bytes.utf8.encode("gig_contract")),
+        Buffer.from(anchor.utils.bytes.utf8.encode(contractId)),
+      ],
+      program.programId
     );
 
-    // Create a custom token mint
-    payTokenMint = await createMint(
-      provider.connection,
-      employer, // Payer
-      employer.publicKey, // Mint authority
-      null, // Freeze authority (optional)
-      6, // Decimals
-      TOKEN_PROGRAM_ID
-    );
-    console.log("Token Mint:", payTokenMint.toString());
+    console.log("jobContract: ", jobContract.toBase58());
 
-    // Derive associated token accounts
-    employerAta = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
-      employer,
-      payTokenMint,
+    const txHash = await provider.connection.sendTransaction(transaction, [
+      signer,
+    ]);
+    console.log("Transaction hash: ", txHash);
+
+    const txConfirm = await provider.connection.confirmTransaction(txHash);
+    console.log("Transaction hash confirm: ", txConfirm);
+
+    const balance = await provider.connection.getBalance(signer.publicKey);
+    const employerBalance = await provider.connection.getBalance(
       employer.publicKey
-    ).then(ata => ata.address);
+    );
+    const jobContractBalance = await provider.connection.getBalance(
+      jobContract
+    );
+    console.log(`
+          balance: ${balance / anchor.web3.LAMPORTS_PER_SOL},
+          employerBalance: ${employerBalance / anchor.web3.LAMPORTS_PER_SOL},
+          jobContractBalance: ${
+            jobContractBalance / anchor.web3.LAMPORTS_PER_SOL
+          }
+        `);
 
-    contractAta = await getOrCreateAssociatedTokenAccount(
+    PAY_TOKEN_MINT_ADDRESS = new anchor.web3.PublicKey(
+      "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
+    );
+
+    // Create the custom USDT-like token mint
+    PAY_TOKEN_MINT_ADDRESS = await createMint(
       provider.connection,
       employer,
-      payTokenMint,
-      provider.wallet.publicKey // Using provider's wallet as contract authority for simplicity
-    ).then(ata => ata.address);
+      employer.publicKey,
+      null,
+      6
+    );
 
-    employerReferralAta = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
-      employerReferral,
-      payTokenMint,
-      employerReferral.publicKey
-    ).then(ata => ata.address);
+    console.log("New token mint: ", PAY_TOKEN_MINT_ADDRESS.toBase58());
 
+    // Create associated token accounts for employer and contract
+    // Create associated token accounts for employer and contract
+    employerAta = (
+      await getOrCreateAssociatedTokenAccount(
+        provider.connection,
+        employer,
+        PAY_TOKEN_MINT_ADDRESS,
+        signer.publicKey
+      )
+    ).address; // Access the address property
 
-    // Mint tokens to employer's ATA
+    console.log("employerAta: ", employerAta.toBase58());
+
+    employerReferralAta = (
+      await getOrCreateAssociatedTokenAccount(
+        provider.connection,
+        employer,
+        PAY_TOKEN_MINT_ADDRESS,
+        employerReferral.publicKey
+      )
+    ).address; // Access the address property
+
+    console.log("employerReferralAta: ", employerReferralAta.toBase58());
+
+    contractAta = (
+      await getOrCreateAssociatedTokenAccount(
+        provider.connection,
+        employer,
+        PAY_TOKEN_MINT_ADDRESS,
+        jobContract,
+        true
+      )
+    ).address; // Access the address property
+
+    console.log("contractAta: ", contractAta.toBase58());
+
     await mintTo(
       provider.connection,
       employer,
-      payTokenMint,
+      PAY_TOKEN_MINT_ADDRESS,
       employerAta,
-      provider.wallet.publicKey,
-      1_000_000_000 // 1,000 tokens
+      employer.publicKey,
+      1_000_000_000
     );
 
-    console.log("Employer ATA", employerAta.toString());
-    console.log("Contract ATA", contractAta.toString());
-    console.log("Employer Referral ATA", employerReferralAta.toString());
+    const tokenBalance = await provider.connection.getTokenAccountBalance(
+      employerAta
+    );
+    console.log("Token balance: ", tokenBalance);
+
+    // Initialize the job contract and associated token accounts as needed
+    // (You would need to implement this part based on your contract's logic)
   });
 
-  it("Job Listing with Featured Employer (with referral)", async () => {
-    const featuredDay = 1;
-    const listingFee = 21_000_000; //For 1 day
-    const referralAmount = (listingFee * 10) / 100;
-    const contractAmount = (listingFee * 90) / 100;
+  // it("should create a job listing", async () => {
+  //   console.log("------------- creating a job listing -------------");
+  // });
 
-    const [jobContractPDA, _jobContractBump] =
-      anchor.web3.PublicKey.findProgramAddressSync(
-        [anchor.utils.bytes.utf8.encode(CONTRACT_SEED),
-        anchor.utils.bytes.utf8.encode(contractId)],
-        program.programId
-      );
+  // it("Should list a job with a $1 fee on the employer side", async () => {
+  //   // Call the job_listing_with_one_fee_employer function
+  //   const tx = await program.methods
+  //     .jobListingWithOneFeeEmployer(contractId)
+  //     .accounts({
+  //       employer: employer.publicKey,
+  //       jobContract: jobContract,
+  //       employerAta: employerAta,
+  //       contractAta: contractAta,
+  //       employerReferralAta: "H91b4jtXRmqoD5JY4oEJRCiggzZnbmmkox5itHeYM9cE",
+  //       tokenProgram: TOKEN_PROGRAM_ID,
+  //       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //       systemProgram: anchor.web3.SystemProgram.programId,
+  //     })
+  //     .signers([employer])
+  //     .rpc();
 
-    console.log("jobContractPDA", jobContractPDA.toString());
+  //   console.log("Transaction signature", tx);
 
-    try {
-      const tx = await program.methods
-        .jobListingWithFeatureEmployer(contractId, featuredDay)
-        .accounts({
-          employer: employer.publicKey,
-          jobContract: jobContractPDA,
-          employerAta: employerAta,
-          contractAta: contractAta,
-          employerReferralAta: employerReferralAta,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([employer])
-        .rpc();
+  //   // Add assertions to check the state after the transaction
+  //   // For example, check if the job contract status is updated
+  //   const updatedJobContract = await program.account.jobContract.fetch(
+  //     jobContract
+  //   );
 
-      console.log("Your transaction signature", tx);
+  //   const statusKeys = Object.keys(updatedJobContract.status);
+  //   console.log("statusKeys: ", statusKeys);
 
-      // Fetch employer referral ATA balance and assert
-      const employerReferralAtaAccount = await provider.connection.getAccountInfo(employerReferralAta);
-      const employerReferralBalance = anchor.utils.bytes.u64.decode(employerReferralAtaAccount.data.slice(64, 72));
-      assert.equal(employerReferralBalance, referralAmount, "Referral amount not transferred correctly");
+  //   const tokenBalance = await provider.connection.getTokenAccountBalance(
+  //       employerAta
+  //     );
+  //     console.log("Token balance: ", tokenBalance);
+  //   const employerReferralTokenBalance = await provider.connection.getTokenAccountBalance(
+  //     employerReferralAta
+  //   );
+  //   console.log("EmployerReferralTokenBalance ===> : ", employerReferralTokenBalance);
+  //   assert.equal(
+  //     statusKeys[0],
+  //     "created",
+  //     "Job contract status should be 'Listed'"
+  //   );
+  // });
 
-      // Fetch contract ATA balance and assert
-      const contractAtaAccount = await provider.connection.getAccountInfo(contractAta);
-      const contractAtaBalance = anchor.utils.bytes.u64.decode(contractAtaAccount.data.slice(64, 72));
-      assert.equal(contractAtaBalance, contractAmount, "Contract amount not transferred correctly");
+  // it("have to withdraw the admin fee", async () => {
+  //   const balance = await provider.connection.getTokenAccountBalance(contractAta);
+  //   console.log("Contract token balance: ", contractAta.toBase58(), "\n", balance);
+    
+
+  //   const withdrawATA = await getOrCreateAssociatedTokenAccount(
+  //       provider.connection,
+  //       signer,
+  //       PAY_TOKEN_MINT_ADDRESS,
+  //       signer.publicKey
+  //   );
+
+  //   const withdrawAddressBalance = await provider.connection.getTokenAccountBalance(withdrawATA.address);
+  //   console.log("Withdraw address balance: ", withdrawATA.address.toBase58(), "\n", contractId, withdrawAddressBalance);
 
 
-      // Fetch job contract account and assert
-      const jobContractAccount = await program.account.jobContract.fetch(jobContractPDA);
-      assert.ok(jobContractAccount.contractId === contractId, "Contract ID mismatch");
-      assert.ok(jobContractAccount.status.created === true, "Status is not Created");
-      assert.ok(jobContractAccount.featured === true, "Job is not featured");
-      assert.ok(jobContractAccount.featuredDay === featuredDay, "Featured day mismatch");
-      assert.ok(jobContractAccount.employerReferral.equals(employerReferral.publicKey), "Employer referral mismatch");
-      console.log("jobContractAccount", jobContractAccount);
 
-    } catch (error) {
-      console.log("Error: ", error);
-      assert.fail(error);
-    }
-  });
 
-  it("Job Listing with Featured Employer (without referral)", async () => {
-    const featuredDay = 7;
-    const listingFee = 71_000_000; // For 7 days
-    const contractIdNoReferral = `contract-${Date.now() + 1}`;
 
-    const [jobContractPDANoReferral, _jobContractBump] =
-      anchor.web3.PublicKey.findProgramAddressSync(
-        [anchor.utils.bytes.utf8.encode(CONTRACT_SEED),
-        anchor.utils.bytes.utf8.encode(contractIdNoReferral)],
-        program.programId
-      );
+  //   const tx = await program.methods
+  //     .adminWithdrawJobContract(contractId)
+  //     .accounts({
+  //       contract: jobContract,
+  //       contractAta: contractAta,
+  //       admin: signer.publicKey,
+  //       tokenProgram: TOKEN_PROGRAM_ID,
+  //       withdrawAddress: withdrawATA.address,
+  //       payTokenMint: PAY_TOKEN_MINT_ADDRESS,
+  //     })
+  //     .signers([signer])
+  //     .rpc();
 
-    try {
-      const tx = await program.methods
-        .jobListingWithFeatureEmployer(contractIdNoReferral, featuredDay)
-        .accounts({
-          employer: employer.publicKey,
-          jobContract: jobContractPDANoReferral,
-          employerAta: employerAta,
-          contractAta: contractAta,
-          employerReferralAta: null, // No referral
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([employer])
-        .rpc();
+  //   console.log("Transaction signature", tx);
 
-      console.log("Your transaction signature", tx);
+  //   const postBalance = await provider.connection.getTokenAccountBalance(contractAta);
+  //   console.log("Contract token balance: ", contractAta.toBase58(), "\n", postBalance.value.uiAmount);
+    
 
-      // Fetch contract ATA balance and assert
-      const contractAtaAccount = await provider.connection.getAccountInfo(contractAta);
-      const contractAtaBalance = anchor.utils.bytes.u64.decode(contractAtaAccount.data.slice(64, 72));
+  //   const withdrawAddressPostBalance = await provider.connection.getTokenAccountBalance(withdrawATA.address);
+  //   console.log("Withdraw address balance: ", withdrawATA.address.toBase58(), "\n", contractId, withdrawAddressPostBalance.value.uiAmount);
 
-      // initial balance from previous test + full listing fee
-      assert.equal(contractAtaBalance, listingFee + 63900000, "Contract amount not transferred correctly");
 
-      // Fetch job contract account and assert
-      const jobContractAccount = await program.account.jobContract.fetch(jobContractPDANoReferral);
-      assert.ok(jobContractAccount.contractId === contractIdNoReferral, "Contract ID mismatch");
-      assert.ok(jobContractAccount.status.created === true, "Status is not Created");
-      assert.ok(jobContractAccount.featured === true, "Job is not featured");
-      assert.ok(jobContractAccount.featuredDay === featuredDay, "Featured day mismatch");
-      assert.ok(jobContractAccount.employerReferral.equals(anchor.web3.SystemProgram.programId), "Employer referral should be default value");
 
-    } catch (error) {
-      console.log("Error: ", error);
-      assert.fail(error);
-    }
-  });
+  // });
 
-  it("Job Listing with Featured Employer (excluded referral)", async () => {
-    const featuredDay = 30;
-    const listingFee = 150_000_000; // For 30 days
-    const contractIdExcludedReferral = `contract-${Date.now() + 2}`;
+  it("Should list a job with a featured fee on the employer side", async () => {
+    console.log("------------- creating a featured job listing -------------");
 
-    const [jobContractPDAExcludedReferral, _jobContractBump] =
-      anchor.web3.PublicKey.findProgramAddressSync(
-        [anchor.utils.bytes.utf8.encode(CONTRACT_SEED),
-        anchor.utils.bytes.utf8.encode(contractIdExcludedReferral)],
-        program.programId
-      );
+    const featuredDay = 3; // Example: listing for 3 days
+    const expectedFee = 36_000_000; // Expected fee for 3 days
 
-    // Generate a new keypair for the excluded referral ATA, and fund it with SOL
-    const excludedReferral = Keypair.generate();
-    await provider.connection.confirmTransaction(
-        await provider.connection.requestAirdrop(
-            excludedReferral.publicKey,
-            2 * anchor.web3.LAMPORTS_PER_SOL
-        ),
-        "confirmed"
+    // Fetch the initial token balance of the employer
+    const initialEmployerTokenBalance =
+      await provider.connection.getTokenAccountBalance(employerAta);
+    console.log(
+      "Initial Employer Token Balance: ",
+      initialEmployerTokenBalance.value.amount
     );
 
-    // Create the associated token account for the excluded referral
-    const excludedReferralAta = await getOrCreateAssociatedTokenAccount(
-        provider.connection,
-        excludedReferral,
-        payTokenMint,
-        excludedReferral.publicKey
-    ).then(ata => ata.address);
+    // Fetch the initial token balance of the contract
+    const initialContractTokenBalance =
+      await provider.connection.getTokenAccountBalance(contractAta);
+    console.log(
+      "Initial Contract Token Balance: ",
+      initialContractTokenBalance.value.amount
+    );
 
-    try {
-      const tx = await program.methods
-        .jobListingWithFeatureEmployer(contractIdExcludedReferral, featuredDay)
-        .accounts({
-          employer: employer.publicKey,
-          jobContract: jobContractPDAExcludedReferral,
-          employerAta: employerAta,
-          contractAta: contractAta,
-          employerReferralAta: excludedReferralAta, // No referral
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([employer])
-        .rpc();
+    // Call the job_listing_with_feature_employer function
+    const tx = await program.methods
+      .jobListingWithFeatureEmployer(contractId, featuredDay)
+      .accounts({
+        employer: employer.publicKey,
+        jobContract: jobContract,
+        employerAta: employerAta,
+        contractAta: contractAta,
+        employerReferralAta: employerReferralAta,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .signers([employer])
+      .rpc();
 
-      console.log("Your transaction signature", tx);
+    console.log("Transaction signature", tx);
 
-      // Fetch contract ATA balance and assert
-      const contractAtaAccount = await provider.connection.getAccountInfo(contractAta);
-      const contractAtaBalance = anchor.utils.bytes.u64.decode(contractAtaAccount.data.slice(64, 72));
+    // Fetch the updated job contract
+    const updatedJobContract = await program.account.jobContract.fetch(
+      jobContract
+    );
+    console.log("updatedJobContract: ", updatedJobContract);
 
-      // initial balance from previous test + full listing fee
-      assert.equal(contractAtaBalance, listingFee + 221900000, "Contract amount not transferred correctly");
+    // Check if the employer's token balance is reduced by the listing fee
+    const employerTokenBalance =
+      await provider.connection.getTokenAccountBalance(employerAta);
+    assert.equal(
+      employerTokenBalance.value.amount,
+      (1_000_000_000 - expectedFee).toString(),
+      "Employer's token balance should reflect the listing fee deduction"
+    );
 
-      // Fetch job contract account and assert
-      const jobContractAccount = await program.account.jobContract.fetch(jobContractPDAExcludedReferral);
-      assert.ok(jobContractAccount.contractId === contractIdExcludedReferral, "Contract ID mismatch");
-      assert.ok(jobContractAccount.status.created === true, "Status is not Created");
-      assert.ok(jobContractAccount.featured === true, "Job is not featured");
-      assert.ok(jobContractAccount.featuredDay === featuredDay, "Featured day mismatch");
-      assert.ok(jobContractAccount.employerReferral.equals(anchor.web3.SystemProgram.programId), "Employer referral should be default value");
+    // Fetch the updated token balance of the employer after job posting
+    const updatedEmployerTokenBalance =
+      await provider.connection.getTokenAccountBalance(employerAta);
+    console.log(
+      "Updated Employer Token Balance: ",
+      updatedEmployerTokenBalance.value.amount
+    );
 
-    } catch (error) {
-      console.log("Error: ", error);
-      assert.fail(error);
-    }
-  });
+    // Fetch the updated token balance of the contract after job posting
+    const updatedContractTokenBalance =
+      await provider.connection.getTokenAccountBalance(contractAta);
+    console.log(
+      "Updated Contract Token Balance: ",
+      updatedContractTokenBalance.value.amount
+    );
 
-  it("Invalid featured day", async () => {
-    const invalidFeaturedDay = 99;
-    const contractIdInvalidDay = `contract-${Date.now() + 3}`;
-
-    const [jobContractPDAInvalidDay, _jobContractBump] =
-      anchor.web3.PublicKey.findProgramAddressSync(
-        [anchor.utils.bytes.utf8.encode(CONTRACT_SEED),
-        anchor.utils.bytes.utf8.encode(contractIdInvalidDay)],
-        program.programId
-      );
-
-    try {
-       await program.methods
-        .jobListingWithFeatureEmployer(contractIdInvalidDay, invalidFeaturedDay)
-        .accounts({
-          employer: employer.publicKey,
-          jobContract: jobContractPDAInvalidDay,
-          employerAta: employerAta,
-          contractAta: contractAta,
-          employerReferralAta: null,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([employer])
-        .rpc();
-
-        assert.fail("Should have thrown an error due to invalid featured day");
-
-    } catch (error) {
-      console.log("Error: ", error);
-      // Check if the error message contains the expected error
-      assert.ok(error.message.includes("InvalidFeaturedDay"), "Error message does not match");
-    }
+    console.log("Featured job listing created successfully!");
   });
 });
