@@ -12,6 +12,7 @@ import {
 } from "@solana/spl-token";
 import { GigBasicContract } from "../target/types/gig_basic_contract";
 import { v4 as uuid } from "uuid";
+import { Keypair } from "@solana/web3.js";
 
 describe("Admin Withdraw", () => {
   const provider = anchor.AnchorProvider.env();
@@ -26,7 +27,7 @@ describe("Admin Withdraw", () => {
   let contractAta: anchor.web3.PublicKey;
   let employerReferral: anchor.web3.PublicKey;
   let employerReferralAta: anchor.web3.PublicKey;
-  let PAY_TOKEN_MINT_ADDRESS: anchor.web3.PublicKey;
+  let PAY_TOKEN_MINT_ADDRESS: anchor.web3.Keypair;
   let ASSOCIATED_TOKEN_PROGRAM_ID: anchor.web3.PublicKey;
   let contractId: string;
 
@@ -83,20 +84,19 @@ describe("Admin Withdraw", () => {
           }
         `);
 
-    PAY_TOKEN_MINT_ADDRESS = new anchor.web3.PublicKey(
-      "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
-    );
+    PAY_TOKEN_MINT_ADDRESS = Keypair.generate();
 
     // Create the custom USDT-like token mint
-    PAY_TOKEN_MINT_ADDRESS = await createMint(
+    await createMint(
       provider.connection,
       employer,
       employer.publicKey,
       null,
-      6
+      6,
+      PAY_TOKEN_MINT_ADDRESS
     );
 
-    console.log("New token mint: ", PAY_TOKEN_MINT_ADDRESS.toBase58());
+    console.log("New token mint: ", PAY_TOKEN_MINT_ADDRESS.publicKey.toBase58());
 
     // Create associated token accounts for employer and contract
     // Create associated token accounts for employer and contract
@@ -104,8 +104,8 @@ describe("Admin Withdraw", () => {
       await getOrCreateAssociatedTokenAccount(
         provider.connection,
         employer,
-        PAY_TOKEN_MINT_ADDRESS,
-        signer.publicKey
+        PAY_TOKEN_MINT_ADDRESS.publicKey,
+        employer.publicKey
       )
     ).address; // Access the address property
 
@@ -115,8 +115,8 @@ describe("Admin Withdraw", () => {
       await getOrCreateAssociatedTokenAccount(
         provider.connection,
         employer,
-        PAY_TOKEN_MINT_ADDRESS,
-        employerReferral.publicKey
+        PAY_TOKEN_MINT_ADDRESS.publicKey,
+        employerReferral
       )
     ).address; // Access the address property
 
@@ -126,7 +126,7 @@ describe("Admin Withdraw", () => {
       await getOrCreateAssociatedTokenAccount(
         provider.connection,
         employer,
-        PAY_TOKEN_MINT_ADDRESS,
+        PAY_TOKEN_MINT_ADDRESS.publicKey,
         jobContract,
         true
       )
@@ -137,7 +137,7 @@ describe("Admin Withdraw", () => {
     await mintTo(
       provider.connection,
       employer,
-      PAY_TOKEN_MINT_ADDRESS,
+      PAY_TOKEN_MINT_ADDRESS.publicKey,
       employerAta,
       employer.publicKey,
       1_000_000_000
