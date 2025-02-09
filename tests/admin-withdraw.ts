@@ -274,7 +274,7 @@ describe("Admin Withdraw", () => {
         jobContract: jobContract,
         employerAta: employerAta,
         contractAta: contractAta,
-        employerReferralAta: employerReferralAta,
+        employerReferralAta: null,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
