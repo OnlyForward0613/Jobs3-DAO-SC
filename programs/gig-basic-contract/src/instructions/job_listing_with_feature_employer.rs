@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{self, Mint, Token, TokenAccount, Transfer as SplTransfer},
@@ -9,6 +10,7 @@ use crate::state::job_contract::*;
 use crate::constants::{
     CONTRACT_SEED,
     PAY_TOKEN_MINT_ADDRESS,
+    EMPLOYER_REFERRAL,
 };
 use crate::errors::{
     GigContractError,
@@ -24,7 +26,7 @@ pub fn job_listing_with_feature_employer(
     let job_contract = &mut ctx.accounts.job_contract;
 
     // Define the fees based on featured_day
-    let listing_fee = match featured_day {
+    let listing_fee : u64 = match featured_day {
         1 => 21_000_000,  // 24 hours
         3 => 36_000_000,  // 3 days
         7 => 71_000_000,  // 7 days
@@ -41,16 +43,15 @@ pub fn job_listing_with_feature_employer(
     let authority = &ctx.accounts.employer;
     let token_program = &ctx.accounts.token_program;
 
-    let referral_address_to_exclude = "3x9USDofKPb6rREu2dWe9rcvT4QMHQS1PrJ13WuZ1QL3";
-
     // Handle referral transfer if a referral account is provided and not the excluded address
     if let Some(employer_referral_ata) = &ctx.accounts.employer_referral_ata {
-        if employer_referral_ata.key().to_string() != referral_address_to_exclude {
-            msg!("Employer referral provided: {}", employer_referral_ata.key());
+        msg!("Employer refferal provided!");
+        if employer_referral_ata.key() != EMPLOYER_REFERRAL {
+            msg!("Employer referral provided: {} {}", employer_referral_ata.key(), listing_fee);
             job_contract.employer_referral = employer_referral_ata.key();
 
-            let referral_amount = (listing_fee * 10 / 100) as u64;
-            let contract_amount = (listing_fee * 90 / 100) as u64;
+            let referral_amount: u64 = listing_fee * 10 / 100;
+            let contract_amount: u64 = listing_fee * 90 / 100;
 
             // Transfer referral bonus
             token::transfer(
@@ -65,6 +66,8 @@ pub fn job_listing_with_feature_employer(
                 referral_amount
             )?;
 
+            msg!("confirmed first send");
+
             // Transfer the remaining amount to the contract
             token::transfer(
                 CpiContext::new(
@@ -77,6 +80,9 @@ pub fn job_listing_with_feature_employer(
                 ),
                 contract_amount
             )?;
+
+            msg!("confirmed second send");
+
         } else {
             msg!("Employer referral provided, but is the excluded address.  Skipping referral bonus.");
 
@@ -146,10 +152,11 @@ pub struct JobListingWithFeatureEmployerContext<'info> {
     // #[account(mut)]
     // pub employer_referral: Option<Account<'info, TokenAccount>>,
     // Optional
+
     #[account(
         mut, 
-        associated_token::mint = PAY_TOKEN_MINT_ADDRESS,
-        associated_token::authority = job_contract.employer_referral,
+        // constraint = employer_referral_ata.mint == PAY_TOKEN_MINT_ADDRESS,
+        constraint = employer_referral_ata.owner != EMPLOYER_REFERRAL,
     )]
     pub employer_referral_ata: Option<Account<'info, TokenAccount>>,
     pub token_program: Program<'info, Token>,
