@@ -11,3 +11,4 @@ pub const PAY_TOKEN_MINT_ADDRESS: Pubkey = anchor_lang::solana_program::pubkey!(
 // pub const PAY_TOKEN_MINT_ADDRESS: Pubkey = anchor_lang::solana_program::pubkey!("HSvEJfU8hXUWFRodbVbRfwYb2p4DwSwpiMaoB7UDRVD4"); // USDT address for devnet
 // pub const PAY_TOKEN_MINT_ADDRESS: Pubkey = anchor_lang::solana_program::pubkey!("7FctSfSZ9GonfMrybp45hzoQyU71CEjjZFxxoSzqKWT"); // BPT address for devnet
 pub const SOL_KEY: Pubkey = anchor_lang::solana_program::pubkey!("So11111111111111111111111111111111111111112");
+pub const EMPLOYER_REFERRAL: Pubkey =  anchor_lang::solana_program::pubkey!("3x9USDofKPb6rREu2dWe9rcvT4QMHQS1PrJ13WuZ1QL3");

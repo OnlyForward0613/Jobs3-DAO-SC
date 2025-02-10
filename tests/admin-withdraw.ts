@@ -35,7 +35,7 @@ describe("Admin Withdraw", () => {
     console.log("------------- before -------------");
     // Create employer account
     employer = anchor.web3.Keypair.generate();
-    employerReferral = new anchor.web3.PublicKey("2pVH34V7aaMnZn6f62Q7ZF444v5FgnWXF895gYtC9E9V");
+    employerReferral = new anchor.web3.PublicKey("FYNfBvTVTNrYGfjmHfETkEWb5xFEcDxKYqBgsGZxtJJD");
     // sol transfer
     const transaction = new anchor.web3.Transaction();
 
